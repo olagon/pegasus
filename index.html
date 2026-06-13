@@ -110,6 +110,8 @@
   .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
   .stat .big{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}
   .stat .lbl{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .pbar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:14px}
+  .pfill{height:100%;background:var(--accent);border-radius:999px;transition:width .5s}
   .blocks{display:flex;align-items:flex-end;gap:6px;height:88px;margin-top:6px}
   .blk{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
   .blk .barwrap{width:100%;height:64px;background:var(--bg);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--line)}
@@ -529,12 +531,14 @@ function counts(){
   let due=0,newc=0,sumLvl=0,mastered=0;
   allPegs().forEach(p=>{
     sumLvl+=p.st.level;
-    if(p.st.level>=5) mastered++;
+    if(p.st.level>=5 && p.st.dueAt>now) mastered++;   // mastered = top level AND still fresh
     if(!p.st.seen) newc++;
     else if(p.st.dueAt<=now) due++;
   });
   const total=PEG_DATA.length;
-  return { due, newc, total, mastered, pct:Math.round(sumLvl/(total*5)*100) };
+  return { due, newc, total, mastered,
+    pctMastered:Math.round(mastered/total*100),
+    pctProgress:Math.round(sumLvl/(total*5)*100) };
 }
 
 function renderHome(){
@@ -552,8 +556,10 @@ function renderHome(){
 
   html += `<div class="card center">
     <div class="promptlabel">Daily practice</div>
-    <div class="prompt num" style="font-size:2.4rem;margin:6px 0 2px">${c.pct}% mastered</div>
-    <div class="sub">${c.due} due now · ${c.newc} new to learn</div>
+    <div class="prompt num" style="font-size:2.4rem;margin:6px 0 2px">${c.pctMastered}% mastered</div>
+    <div class="sub">${c.mastered} of ${c.total} pegs mastered · ${c.due} due · ${c.newc} new</div>
+    <div class="pbar" title="Overall learning progress"><div class="pfill" style="width:${c.pctProgress}%"></div></div>
+    <div class="sub" style="font-size:.8rem;margin-top:5px">${c.pctProgress}% learning progress</div>
     <div style="margin-top:18px"><button class="btn" data-action="startPractice">${doneToday?"Practice more":"Start practice"} →</button></div>
     ${doneToday?`<div class="imgnote" style="margin-top:10px">✓ Today's goal of ${state.settings.dailyGoal} cards is done. Streak: <b>${currentStreak()}</b></div>`:`<div class="imgnote" style="margin-top:10px">${state.history[today]||0} / ${state.settings.dailyGoal} cards today</div>`}
   </div>`;
@@ -564,9 +570,10 @@ function renderHome(){
     <div class="stat"><div class="big">${c.mastered}</div><div class="lbl">Mastered</div></div>
     <div class="stat"><div class="big">${c.due}</div><div class="lbl">Due now</div></div>
   </div>`;
+  html += `<div class="sub" style="text-align:center;font-size:.8rem;margin:2px 2px 0">A peg counts as <b>mastered</b> only after correct recall across several spaced reviews over about three weeks, and it needs an occasional review to stay mastered.</div>`;
 
   // mastery blocks
-  html += `<div class="secttitle">Mastery by block</div><div class="card"><div class="blocks">`;
+  html += `<div class="secttitle">Progress by block</div><div class="card"><div class="blocks">`;
   for(let b=0;b<10;b++){
     const lo=b*10, hi=b*10+9;
     let sum=0,cnt=0;
@@ -631,10 +638,17 @@ function heatmapHTML(){
    ========================================================================= */
 function gradeCard(n, correct){
   const st=state.pegs[n];
+  const now=Date.now();
+  const eligible = !st.seen || st.dueAt<=now;   // new or genuinely due -> may advance a level
   st.seen=true;
-  if(correct){ st.level=Math.min(5, st.level+1); }
-  else { st.level=0; }
-  st.dueAt = Date.now() + INTERVALS[st.level];
+  if(!correct){
+    st.level=0;          // a miss always drops it back to the start
+    st.dueAt=now;        // and brings it back right away
+  } else if(eligible){
+    st.level=Math.min(5, st.level+1);   // advance only on a scheduled (or brand new) review
+    st.dueAt=now+INTERVALS[st.level];
+  }
+  // correct but reviewed early (before it was due): level and schedule are held, no free progress
 }
 function recordReview(){
   const t=dayStr(0);
@@ -659,15 +673,49 @@ function startPractice(){
   if(slots>0 && unseen.length){
     chosen=chosen.concat(shuffle(unseen).slice(0, Math.min(slots, NEW_CAP)));
   }
-  if(chosen.length===0){ // nothing due, nothing new -> review soonest
-    chosen=seen.sort((a,b)=>a.st.dueAt-b.st.dueAt).slice(0,SESSION_SIZE);
-  }
+  if(chosen.length===0){ return renderCaughtUp(); }   // nothing due, nothing new
+  beginSession(chosen, false);
+}
+function startExtra(){
+  const seen=allPegs().filter(p=>p.st.seen).sort((a,b)=>a.st.dueAt-b.st.dueAt);
+  if(!seen.length) return startPractice();
+  beginSession(seen.slice(0,SESSION_SIZE), true);
+}
+function beginSession(chosen, extra){
   App.session={
     queue: shuffle(chosen).map(p=>({ n:p.n, dir: Math.random()<0.5?"n2w":"w2n" })),
-    i:0, correct:0, total:0, points:0
+    i:0, correct:0, total:0, points:0, extra:!!extra
   };
   App.screen="practice";
   nextCard();
+}
+function renderCaughtUp(){
+  App.screen="caught-up";
+  const now=Date.now();
+  const c=counts();
+  const nextDueAt=allPegs().map(p=>p.st.dueAt).filter(t=>t>now).sort((a,b)=>a-b)[0];
+  let when="";
+  if(nextDueAt){
+    const mins=Math.round((nextDueAt-now)/60000);
+    if(mins<60) when=`Next review in about ${Math.max(1,mins)} min.`;
+    else if(mins<1440) when=`Next review in about ${Math.round(mins/60)} hr.`;
+    else when=`Next review in about ${Math.round(mins/1440)} day(s).`;
+  }
+  stage.innerHTML=`<div class="card center">
+    <div class="ti" style="font-size:2.4rem">✅</div>
+    <h2>You're all caught up</h2>
+    <p class="sub">Nothing is due right now and there are no new pegs waiting. ${when} Spacing reviews out is what locks them in, so coming back later beats cramming.</p>
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><div class="big">${c.mastered}</div><div class="lbl">Mastered</div></div>
+      <div class="stat"><div class="big">${c.pctProgress}%</div><div class="lbl">Progress</div></div>
+      <div class="stat"><div class="big">${currentStreak()}</div><div class="lbl">Streak</div></div>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" data-go="home">Home</button>
+      <button class="btn" data-action="startExtra">Extra practice</button>
+    </div>
+    <div class="imgnote" style="margin-top:8px">Extra practice drills your weakest pegs but does not advance levels, so the spaced schedule stays honest.</div>
+  </div>`;
 }
 
 function nextCard(){
@@ -699,7 +747,7 @@ function drawCard(){
   const promptIsNum = dir==="n2w";
   const promptVal = promptIsNum ? peg.n : peg.word;
   let body=`
-    <div class="topnav"><button class="back" data-action="quitPractice">← End session</button><div class="spacer"></div><span class="pill">${progress}</span></div>
+    <div class="topnav"><button class="back" data-action="quitPractice">← End session</button><div class="spacer"></div>${s.extra?'<span class="pill">Extra</span> ':''}<span class="pill">${progress}</span></div>
     <div class="card center">
       <div class="promptlabel">${promptIsNum?"What's the peg word for":"What number is"}</div>
       <div class="prompt ${promptIsNum?'num':'word'}">${esc(promptVal)} ${promptIsNum?"":speakBtn(peg.word)}</div>
@@ -1224,7 +1272,7 @@ function renderSettings(){
    EVENT WIRING
    ========================================================================= */
 const actions={
-  startPractice, quitPractice, advance, quickImage, submitTyped,
+  startPractice, startExtra, quitPractice, advance, quickImage, submitTyped,
   startSound, soundNext, startDecode, decodeCheck, inlineNext,
   startSpeed, speedAdvance, genChain, startMemorize, memStart, memHide, memCheck,
   resetAll, soundDone
