@@ -836,8 +836,8 @@ function showFeedback(correct, chosenDisplay){
   const bk=breakdown(peg.n).map(x=>`<span class="scode">${esc(x.sound)} <b>${x.digit}</b></span>`).join("");
   const st=state.pegs[peg.n];
   let imgHTML;
-  if(st.image){ imgHTML=`<div class="imgnote">Your image: <span class="mine">${esc(st.image)}</span></div>`; }
-  else { imgHTML=`<div class="imgnote"><button class="link" data-action="quickImage">+ add a personal image for ${peg.n}</button></div>`; }
+  if(st.image){ imgHTML=`<div class="imgnote">Your description: <span class="mine">${esc(st.image)}</span></div>`; }
+  else { imgHTML=`<div class="imgnote"><button class="link" data-action="quickImage">+ add a vivid description for ${peg.n}</button></div>`; }
 
   const fb=`<div class="fb ${correct?'right':'miss'}">
     <div class="verdict">${correct?"✓ Correct":"✗ Not quite"}</div>
@@ -879,11 +879,11 @@ function quitPractice(){ App.session=null; go("home"); }
 function quickImage(){
   const peg=App.cur.peg;
   const cur=state.pegs[peg.n].image||"";
-  const v=prompt(`Your vivid image for ${peg.n} (${wordOf(peg.n)}):`, cur);
+  const v=prompt(`Your vivid description for ${peg.n} (${wordOf(peg.n)}):`, cur);
   if(v!==null){ state.pegs[peg.n].image=v.trim(); save(); track("image_saved",{peg:peg.n, from:"feedback"});
     // refresh the image note
     const note=stage.querySelector(".imgnote");
-    if(note) note.innerHTML = state.pegs[peg.n].image ? `Your image: <span class="mine">${esc(state.pegs[peg.n].image)}</span>` : `<button class="link" data-action="quickImage">+ add a personal image for ${peg.n}</button>`;
+    if(note) note.innerHTML = state.pegs[peg.n].image ? `Your description: <span class="mine">${esc(state.pegs[peg.n].image)}</span>` : `<button class="link" data-action="quickImage">+ add a vivid description for ${peg.n}</button>`;
   }
 }
 
@@ -1283,13 +1283,13 @@ function renderImages(){
       <div class="num">${p.n}</div>
       <div class="snd">${esc(p.sounds)}</div>
       <input class="wordin" data-wordn="${p.n}" value="${esc(cw)}" placeholder="${esc(p.word)}" autocomplete="off" autocapitalize="words" spellcheck="false">
-      <input class="imgin" data-imgn="${p.n}" value="${esc(img)}" placeholder="your image for it...">
+      <input class="imgin" data-imgn="${p.n}" value="${esc(img)}" placeholder="your vivid description, e.g. Ryan juggling">
     </div>`;
   });
   stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
     <div class="card">
       <h2>Your pegs</h2>
-      <p class="sub">Make these yours. Type your own word to replace the default (shown in grey), and add a vivid image. The sounds stay fixed, so pick a word that uses the same consonant sounds. Leave the word blank to keep the default.</p>
+      <p class="sub">Make these yours. Type your own word to replace the default (shown in grey), and write a vivid description of the scene you picture. The sounds stay fixed, so pick a word that uses the same consonant sounds. Leave the word blank to keep the default.</p>
       <input class="search" id="imgSearch" placeholder="filter by number or word...">
       <div class="imglist" id="imgList">${rows}</div>
     </div>`;
