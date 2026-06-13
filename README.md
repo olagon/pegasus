@@ -43,9 +43,10 @@ State is stored in `localStorage`.
 
 ## Privacy
 
-Pegasus runs entirely in your browser. No accounts, no servers, no analytics,
-no ads, and no tracking. Your progress never leaves your device. See
-[privacy.html](privacy.html) and [terms.html](terms.html) for the details.
+Your progress is saved in your browser and never sent anywhere. Pegasus uses
+privacy-friendly Google Analytics to understand how the app is used. No
+accounts, no ads, and nothing sold. See [privacy.html](privacy.html) and
+[terms.html](terms.html) for the details.
 
 ## License
 

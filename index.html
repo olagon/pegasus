@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pegasus: Learn the Major System Fast</title>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LE8XW1EL9C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-LE8XW1EL9C', {
+    anonymize_ip: true,
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false
+  });
+</script>
+
 <style>
   :root{
     --accent:#5b5bd6;
@@ -420,6 +434,11 @@ function loadState(){
 }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 
+/* Send an analytics event. Safe no-op if gtag is blocked, offline, or not loaded. */
+function track(name, params){
+  try{ if(typeof gtag==="function") gtag("event", name, params||{}); }catch(e){}
+}
+
 /* =========================================================================
    HELPERS
    ========================================================================= */
@@ -520,7 +539,7 @@ function currentStreak(){
   return 0;
 }
 
-function go(screen){ if(App.speed&&App.speed.tick){clearInterval(App.speed.tick);App.speed.tick=null;} App.screen=screen; render(); }
+function go(screen){ if(App.speed&&App.speed.tick){clearInterval(App.speed.tick);App.speed.tick=null;} App.screen=screen; track("mode_open",{mode:screen}); render(); }
 function render(){
   refreshHeader();
   switch(App.screen){
@@ -670,6 +689,8 @@ function updateStreakGoalMet(){
   if(state.streak.lastDate===y) state.streak.count++;
   else state.streak.count=1;
   state.streak.lastDate=t;
+  track("goal_met",{streak:state.streak.count});
+  if([3,7,14,30,50,100,200,365].indexOf(state.streak.count)>=0) track("streak_milestone",{days:state.streak.count});
 }
 
 function startPractice(){
@@ -696,6 +717,7 @@ function beginSession(chosen, extra){
     i:0, correct:0, total:0, points:0, extra:!!extra
   };
   App.screen="practice";
+  track("practice_start",{extra:extra?1:0, cards:App.session.queue.length});
   nextCard();
 }
 function renderCaughtUp(){
@@ -781,13 +803,16 @@ function drawCard(){
 function answerCard(correct, chosenDisplay){
   if(App.cur.answered) return;
   App.cur.answered=true;
-  const s=App.session, {peg,useMC}=App.cur;
+  const s=App.session, {peg,useMC,dir}=App.cur;
+  const prevLevel=state.pegs[peg.n].level;
   s.total++;
   gradeCard(peg.n, correct);
   recordReview();
   if(correct){ s.correct++; const pts=useMC?5:10; s.points+=pts; state.points+=pts; }
   save();
   refreshHeader();
+  track("card_answered",{correct:correct?1:0, direction:dir, style:useMC?"mc":"typed", peg:peg.n, level:prevLevel});
+  if(correct && prevLevel<5 && state.pegs[peg.n].level>=5) track("peg_mastered",{peg:peg.n});
   showFeedback(correct, chosenDisplay);
 }
 
@@ -826,6 +851,7 @@ function summary(){
   const s=App.session;
   const acc = s.total? Math.round(s.correct/s.total*100):0;
   App.screen="practice-done";
+  track("practice_complete",{reviewed:s.total, correct:s.correct, accuracy:acc, points:s.points, extra:s.extra?1:0, streak:currentStreak()});
   stage.innerHTML=`
     <div class="card center">
       <div class="ti" style="font-size:2.4rem">🎉</div>
@@ -849,7 +875,7 @@ function quickImage(){
   const peg=App.cur.peg;
   const cur=state.pegs[peg.n].image||"";
   const v=prompt(`Your vivid image for ${peg.n} (${peg.word}):`, cur);
-  if(v!==null){ state.pegs[peg.n].image=v.trim(); save();
+  if(v!==null){ state.pegs[peg.n].image=v.trim(); save(); track("image_saved",{peg:peg.n, from:"feedback"});
     // refresh the image note
     const note=stage.querySelector(".imgnote");
     if(note) note.innerHTML = state.pegs[peg.n].image ? `Your image: <span class="mine">${esc(state.pegs[peg.n].image)}</span>` : `<button class="link" data-action="quickImage">+ add a personal image for ${peg.n}</button>`;
@@ -860,6 +886,7 @@ function quickImage(){
    SOUND CODE LESSON
    ========================================================================= */
 function startSound(){
+  track("mode_open",{mode:"sound"});
   const qs=[];
   const digits=shuffle([0,1,2,3,4,5,6,7,8,9]);
   // mix: digit -> sounds, and sound -> digit
@@ -908,6 +935,7 @@ function soundDone(){
   state.soundLessonDone=true; save();
   const s=App.sound;
   App.screen="sound-done";
+  track("sound_lesson_complete",{score:s.correct, total:s.qs.length});
   stage.innerHTML=`<div class="card center">
     <div class="ti" style="font-size:2.2rem">🔤</div>
     <h2>Sound code: ${s.correct} / ${s.qs.length}</h2>
@@ -930,6 +958,7 @@ function soundRefHTML(){
    DECODE DRILL  (number -> sounds -> word)
    ========================================================================= */
 function startDecode(){
+  track("mode_open",{mode:"decode"});
   App.decode={ n:pickDecodeNum(), phase:"sounds", done:0, correct:0 };
   App.screen="decode";
   drawDecode();
@@ -970,6 +999,7 @@ function decodeCheck(){
     const ok=matchWord(val,peg.word);
     if(ok) d.correct++;
     d.done++;
+    track("decode_round",{correct:ok?1:0, peg:d.n});
     feedbackInline(ok, `${d.n} = <b>${esc(peg.word)}</b>`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
   }
 }
@@ -992,6 +1022,7 @@ function inlineNext(){ const fn=App._next; App._next=null; if(fn) fn(); }
    ========================================================================= */
 const SPEED_ROUNDS=20;
 function startSpeed(){
+  track("mode_open",{mode:"speed"});
   App.speed={ round:0, times:[], correct:0, t0:0, answered:false, tick:null };
   App.screen="speed";
   speedNext();
@@ -1039,6 +1070,7 @@ function speedDone(){
   const acc=Math.round(s.correct/SPEED_ROUNDS*100);
   const lifeAvg=state.speed.totalCount?state.speed.totalTime/state.speed.totalCount:0;
   App.screen="speed-done";
+  track("speed_complete",{avg_ms:Math.round(avg), best_ms:state.speed.best?Math.round(state.speed.best):0, accuracy:acc, rounds:SPEED_ROUNDS});
   stage.innerHTML=`<div class="card center">
     <div class="ti" style="font-size:2.2rem">⚡</div>
     <h2>Speed drill done</h2>
@@ -1056,6 +1088,7 @@ function speedDone(){
    NUMBER CHAINING
    ========================================================================= */
 function startChain(){
+  track("mode_open",{mode:"chain"});
   App.chain={ type:"random", len:8, number:"" };
   App.screen="chain";
   genChain();
@@ -1083,7 +1116,7 @@ function genChainNumber(){
     let s=""; for(let i=0;i<c.len;i++) s+=rnd(0,9); return s;
   }
 }
-function genChain(){ App.chain.number=genChainNumber(); drawChain(); }
+function genChain(){ App.chain.number=genChainNumber(); track("chain_generate",{type:App.chain.type, digits:App.chain.number.length}); drawChain(); }
 function drawChain(){
   const c=App.chain;
   const chunks=chunkNumber(c.number);
@@ -1127,6 +1160,7 @@ function drawChain(){
    MEMORIZE & REPRODUCE TEST
    ========================================================================= */
 function startMemorize(){
+  track("mode_open",{mode:"memorize"});
   App.mem={ phase:"ready", number:"", t0:0, memTime:0 };
   App.screen="memorize";
   drawMemReady();
@@ -1208,6 +1242,7 @@ function memCheck(){
   if(exact) state.memorize.span=Math.min(20, state.memorize.span+2);
   else state.memorize.span=Math.max(4, state.memorize.span-2);
   save();
+  track("memory_result",{span:prevSpan, exact:exact?1:0, accuracy:acc, digits:target.length, dpm:dpm});
 
   // peg chain answer key
   const chunks=chunkNumber(target);
@@ -1301,6 +1336,7 @@ function submitTyped(){
 
 function resetAll(){
   if(confirm("Reset all progress, streak, images and settings? This cannot be undone.")){
+    track("setting_changed",{name:"reset"});
     localStorage.removeItem(LS_KEY);
     state=defaultState(); save(); applyAccent(); go("home");
   }
@@ -1353,17 +1389,19 @@ document.addEventListener("input", e=>{
 
 /* settings changes */
 document.addEventListener("change", e=>{
-  if(e.target.id==="setGoal"){ const v=Math.max(1,parseInt(e.target.value,10)||20); state.settings.dailyGoal=v; save(); refreshHeader(); }
+  if(e.target.id==="setGoal"){ const v=Math.max(1,parseInt(e.target.value,10)||20); state.settings.dailyGoal=v; save(); refreshHeader(); track("setting_changed",{name:"daily_goal", value:v}); }
   if(e.target.id==="chType"){ App.chain.type=e.target.value; genChain(); }
   if(e.target.id==="chLen"){ App.chain.len=Math.min(20,Math.max(2,parseInt(e.target.value,10)||8)); }
+  if(e.target.matches("[data-imgn]")){ const n=parseInt(e.target.getAttribute("data-imgn"),10); track("image_saved",{peg:n, has_text:e.target.value.trim()?1:0, from:"list"}); }
 });
 document.addEventListener("click", e=>{
   if(e.target.id==="setDark"||e.target.closest("#setDark")){
     state.settings.dark=!state.settings.dark; save(); applyAccent();
     $("#setDark").classList.toggle("on", state.settings.dark);
+    track("setting_changed",{name:"dark_mode", value:state.settings.dark?"on":"off"});
   }
   const sw=e.target.closest(".sw[data-accent]");
-  if(sw){ state.settings.accent=sw.getAttribute("data-accent"); save(); applyAccent(); renderSettings(); }
+  if(sw){ state.settings.accent=sw.getAttribute("data-accent"); save(); applyAccent(); renderSettings(); track("setting_changed",{name:"accent", value:state.settings.accent}); }
 });
 
 /* keyboard-first controls */
