@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pegasus: Learn the Major System Fast</title>
+<style>
+  :root{
+    --accent:#5b5bd6;
+    --accent-soft:#ecebfb;
+    --bg:#f6f6fa;
+    --card:#ffffff;
+    --text:#1c1c28;
+    --muted:#8a8a9a;
+    --line:#e8e8ef;
+    --good:#1f9d6b;
+    --good-soft:#e4f6ee;
+    --bad:#d94b5a;
+    --bad-soft:#fbe7e9;
+    --radius:18px;
+    --shadow:0 6px 24px rgba(30,30,60,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);
+    line-height:1.5;font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;font-size:1rem;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px 80px}
+  header{
+    position:sticky;top:0;z-index:10;background:rgba(246,246,250,.86);
+    backdrop-filter:saturate(150%) blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{max-width:680px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px}
+  .logo{font-weight:700;font-size:1.05rem;letter-spacing:-.01em;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .logo .dot{width:11px;height:11px;border-radius:50%;background:var(--accent)}
+  .spacer{flex:1}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;background:var(--card);
+    border:1px solid var(--line);padding:6px 11px;border-radius:999px;font-size:.9rem;font-weight:600;
+  }
+  .chip .flame{filter:grayscale(1);opacity:.45}
+  .chip.live .flame{filter:none;opacity:1}
+  .chip .done{color:var(--good)}
+  .iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);font-size:1.1rem}
+  .iconbtn:hover{border-color:var(--accent)}
+
+  .stage{padding-top:22px;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 26px}
+  .card.center{text-align:center}
+  h2{font-size:1.15rem;margin:0 0 14px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:.92rem}
+
+  /* big prompt */
+  .prompt{font-weight:700;letter-spacing:-.02em;line-height:1.05;margin:10px 0 4px}
+  .prompt.num{font-size:4.4rem}
+  .prompt.word{font-size:3rem}
+  .promptlabel{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}
+
+  .opts{display:grid;gap:10px;margin-top:22px}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;font-size:1.2rem;font-weight:600;transition:.12s}
+  .opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .opt .badge{width:26px;height:26px;flex:none;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:.85rem;color:var(--muted);font-weight:700}
+  .opt.correct{border-color:var(--good);background:var(--good-soft)}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+  .opt:disabled{cursor:default}
+
+  .field{width:100%;padding:15px 16px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);font-size:1.4rem;text-align:center;font-weight:600;margin-top:20px}
+  .field:focus{outline:none;border-color:var(--accent)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border-radius:13px;padding:13px 18px;font-weight:600;transition:.15s;width:100%}
+  .btn:hover{filter:brightness(1.05)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--card);color:var(--text);border:1.5px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--accent);filter:none}
+  .btn.sm{width:auto;padding:9px 14px;font-size:.9rem}
+  .btn.good{background:var(--good)}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  /* feedback */
+  .fb{margin-top:20px;border-radius:14px;padding:16px;text-align:center}
+  .fb.right{background:var(--good-soft)}
+  .fb.miss{background:var(--bad-soft)}
+  .fb .verdict{font-weight:700;font-size:1.05rem}
+  .fb.right .verdict{color:var(--good)}
+  .fb.miss .verdict{color:var(--bad)}
+  .answer{font-size:2rem;font-weight:700;margin:6px 0}
+  .breakdown{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .scode{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-weight:600}
+  .scode b{color:var(--accent)}
+  .imgnote{margin-top:12px;font-size:.92rem;color:var(--muted)}
+  .imgnote .mine{color:var(--text);font-style:italic}
+  .link{color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;font-size:.9rem;text-decoration:underline}
+
+  .speak{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);vertical-align:middle;margin-left:8px;font-size:.95rem}
+  .speak:hover{border-color:var(--accent)}
+
+  /* home dashboard */
+  .banner{background:var(--accent-soft);border:1px solid #dcd9f7;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.95rem}
+  .banner .btn{width:auto;flex:none}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+  .stat .big{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}
+  .stat .lbl{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .blocks{display:flex;align-items:flex-end;gap:6px;height:88px;margin-top:6px}
+  .blk{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .blk .barwrap{width:100%;height:64px;background:var(--bg);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--line)}
+  .blk .fill{width:100%;background:var(--accent);border-radius:0 0 5px 5px;transition:height .4s}
+  .blk .t{font-size:.66rem;color:var(--muted)}
+  .heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-top:8px;overflow-x:auto;padding-bottom:4px}
+  .hc{width:13px;height:13px;border-radius:3px;background:var(--line)}
+  .legend{display:flex;align-items:center;gap:5px;justify-content:flex-end;color:var(--muted);font-size:.74rem;margin-top:6px}
+  .legend .hc{width:11px;height:11px}
+
+  .menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:left;transition:.15s}
+  .tile:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .tile .ti{font-size:1.4rem}
+  .tile .tt{font-weight:700;margin-top:6px}
+  .tile .td{color:var(--muted);font-size:.84rem;margin-top:2px}
+
+  .progresslabel{display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;margin:18px 0 4px}
+  .secttitle{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:22px 0 8px;font-weight:700}
+
+  /* generic */
+  .topnav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .back{font-size:.9rem;color:var(--muted);font-weight:600}
+  .back:hover{color:var(--accent)}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 10px;font-size:.8rem;font-weight:700}
+  .meta{display:flex;gap:18px;justify-content:center;color:var(--muted);font-size:.85rem;margin-top:6px}
+  .meta b{color:var(--text)}
+
+  .chain{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px 0}
+  .clink{background:var(--accent-soft);border:1px solid #dcd9f7;border-radius:12px;padding:10px 14px;text-align:center;min-width:64px}
+  .clink .cn{font-size:.8rem;color:var(--accent);font-weight:700}
+  .clink .cw{font-weight:700;font-size:1.1rem}
+  .arrow{align-self:center;color:var(--muted)}
+
+  textarea.scratch{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:14px;padding:14px;resize:vertical;font-size:1rem;margin-top:8px}
+  textarea.scratch:focus{outline:none;border-color:var(--accent)}
+
+  .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .ctrl label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+  select,.numin{padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card)}
+  .numin{width:84px;text-align:center}
+
+  /* images list */
+  .imglist{display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow:auto;margin-top:8px;padding-right:4px}
+  .irow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .irow .num{font-weight:700;width:34px;text-align:center;color:var(--accent)}
+  .irow .wd{width:74px;font-weight:600;font-size:.92rem}
+  .irow input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.9rem}
+  .irow input:focus{outline:none;border-color:var(--accent)}
+  .search{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:4px}
+  .search:focus{outline:none;border-color:var(--accent)}
+
+  .settrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
+  .toggle{width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;transition:.18s;flex:none}
+  .toggle.on{background:var(--accent)}
+  .toggle .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle.on .knob{left:23px}
+  .swatches{display:flex;gap:8px}
+  .sw{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+  .sw.sel{border-color:var(--text)}
+  .danger{color:var(--bad);border-color:var(--bad)!important}
+
+  .bigtimer{font-size:3rem;font-weight:700;letter-spacing:.05em}
+  .flashnum{font-size:3.4rem;font-weight:700;letter-spacing:.06em;word-break:break-all}
+
+  @media(max-width:520px){
+    .prompt.num{font-size:3.4rem}
+    .prompt.word{font-size:2.3rem}
+    .menu{grid-template-columns:1fr}
+    .stat .big{font-size:1.4rem}
+    .hc{width:11px;height:11px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo" id="logo"><span class="dot"></span> Pegasus</div>
+    <div class="spacer"></div>
+    <div class="chip" id="streakChip" title="Daily streak"><span class="flame">🔥</span><span id="streakNum">0</span></div>
+    <button class="iconbtn" id="gear" title="Settings">⚙️</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   PEG DATA  —  edit the words here any time. Your progress is keyed by number,
+   so changing a word keeps your level and personal image for that number.
+   ========================================================================= */
+const PEG_DATA = [
+  { n: 0,  sounds: "s/z",  word: "Sea" },
+  { n: 1,  sounds: "t/d",  word: "Tie" },
+  { n: 2,  sounds: "n",    word: "Noah" },
+  { n: 3,  sounds: "m",    word: "Ma" },
+  { n: 4,  sounds: "r",    word: "Ray" },
+  { n: 5,  sounds: "l",    word: "Law" },
+  { n: 6,  sounds: "sh",   word: "Shoe" },
+  { n: 7,  sounds: "k",    word: "Cow" },
+  { n: 8,  sounds: "v",    word: "Ivy" },
+  { n: 9,  sounds: "b",    word: "Bee" },
+  { n: 10, sounds: "t,s",  word: "Toes" },
+  { n: 11, sounds: "t,d",  word: "Toad" },
+  { n: 12, sounds: "t,n",  word: "Town" },
+  { n: 13, sounds: "d,m",  word: "Dam" },
+  { n: 14, sounds: "t,r",  word: "Tire" },
+  { n: 15, sounds: "t,l",  word: "Towel" },
+  { n: 16, sounds: "d,sh", word: "Dish" },
+  { n: 17, sounds: "d,g",  word: "Dog" },
+  { n: 18, sounds: "d,v",  word: "Dove" },
+  { n: 19, sounds: "t,b",  word: "Tub" },
+  { n: 20, sounds: "n,s",  word: "Nose" },
+  { n: 21, sounds: "n,t",  word: "Net" },
+  { n: 22, sounds: "n,n",  word: "Nun" },
+  { n: 23, sounds: "n,m",  word: "Nemo" },
+  { n: 24, sounds: "n,r",  word: "Nero" },
+  { n: 25, sounds: "n,l",  word: "Nail" },
+  { n: 26, sounds: "n,ch", word: "Notch" },
+  { n: 27, sounds: "n,k",  word: "Neck" },
+  { n: 28, sounds: "n,v",  word: "Navy" },
+  { n: 29, sounds: "n,b",  word: "Knob" },
+  { n: 30, sounds: "m,s",  word: "Mouse" },
+  { n: 31, sounds: "m,t",  word: "Mat" },
+  { n: 32, sounds: "m,n",  word: "Moon" },
+  { n: 33, sounds: "m,m",  word: "Mummy" },
+  { n: 34, sounds: "m,r",  word: "Mower" },
+  { n: 35, sounds: "m,l",  word: "Mule" },
+  { n: 36, sounds: "m,ch", word: "Match" },
+  { n: 37, sounds: "m,k",  word: "Mug" },
+  { n: 38, sounds: "m,f",  word: "Muff" },
+  { n: 39, sounds: "m,p",  word: "Map" },
+  { n: 40, sounds: "r,s",  word: "Rose" },
+  { n: 41, sounds: "r,t",  word: "Root" },
+  { n: 42, sounds: "r,n",  word: "Ryan" },
+  { n: 43, sounds: "r,m",  word: "Ram" },
+  { n: 44, sounds: "r,r",  word: "Rower" },
+  { n: 45, sounds: "r,l",  word: "Roll" },
+  { n: 46, sounds: "r,ch", word: "Roach" },
+  { n: 47, sounds: "r,k",  word: "Rock" },
+  { n: 48, sounds: "r,f",  word: "Roof" },
+  { n: 49, sounds: "r,p",  word: "Rope" },
+  { n: 50, sounds: "l,s",  word: "Lace" },
+  { n: 51, sounds: "l,t",  word: "Light" },
+  { n: 52, sounds: "l,n",  word: "Lion" },
+  { n: 53, sounds: "l,m",  word: "Lime" },
+  { n: 54, sounds: "l,r",  word: "Lair" },
+  { n: 55, sounds: "l,l",  word: "Lily" },
+  { n: 56, sounds: "l,sh", word: "Leash" },
+  { n: 57, sounds: "l,k",  word: "Lock" },
+  { n: 58, sounds: "l,f",  word: "Leaf" },
+  { n: 59, sounds: "l,p",  word: "Lip" },
+  { n: 60, sounds: "ch,s", word: "Cheese" },
+  { n: 61, sounds: "sh,t", word: "Sheet" },
+  { n: 62, sounds: "ch,n", word: "Chain" },
+  { n: 63, sounds: "j,m",  word: "Jam" },
+  { n: 64, sounds: "ch,r", word: "Chair" },
+  { n: 65, sounds: "j,l",  word: "Jail" },
+  { n: 66, sounds: "j,j",  word: "Judge" },
+  { n: 67, sounds: "ch,k", word: "Chalk" },
+  { n: 68, sounds: "ch,f", word: "Chef" },
+  { n: 69, sounds: "sh,p", word: "Ship" },
+  { n: 70, sounds: "k,s",  word: "Case" },
+  { n: 71, sounds: "k,t",  word: "Cat" },
+  { n: 72, sounds: "k,n",  word: "Can" },
+  { n: 73, sounds: "k,m",  word: "Comb" },
+  { n: 74, sounds: "k,r",  word: "Car" },
+  { n: 75, sounds: "k,l",  word: "Coal" },
+  { n: 76, sounds: "k,j",  word: "Cage" },
+  { n: 77, sounds: "k,k",  word: "Cake" },
+  { n: 78, sounds: "k,v",  word: "Cave" },
+  { n: 79, sounds: "k,p",  word: "Cup" },
+  { n: 80, sounds: "f,s",  word: "Face" },
+  { n: 81, sounds: "f,t",  word: "Foot" },
+  { n: 82, sounds: "f,n",  word: "Fan" },
+  { n: 83, sounds: "f,m",  word: "Foam" },
+  { n: 84, sounds: "f,r",  word: "Fire" },
+  { n: 85, sounds: "f,l",  word: "Foil" },
+  { n: 86, sounds: "f,sh", word: "Fish" },
+  { n: 87, sounds: "f,g",  word: "Fog" },
+  { n: 88, sounds: "f,f",  word: "Fife" },
+  { n: 89, sounds: "f,b",  word: "Fob" },
+  { n: 90, sounds: "b,s",  word: "Bus" },
+  { n: 91, sounds: "p,t",  word: "Pot" },
+  { n: 92, sounds: "p,n",  word: "Pen" },
+  { n: 93, sounds: "b,m",  word: "Beam" },
+  { n: 94, sounds: "b,r",  word: "Bear" },
+  { n: 95, sounds: "b,l",  word: "Bell" },
+  { n: 96, sounds: "b,ch", word: "Beach" },
+  { n: 97, sounds: "b,k",  word: "Book" },
+  { n: 98, sounds: "b,f",  word: "Beef" },
+  { n: 99, sounds: "p,p",  word: "Pipe" },
+  { n: 100, sounds: "d,s,s", word: "Daisies" }
+];
+
+/* The digit -> sound code. Vowels and w, h, y are free filler and never count. */
+const SOUND_CODE = [
+  { d:0, sounds:"s, z", sample:"s", note:"soft c too" },
+  { d:1, sounds:"t, d", sample:"t" },
+  { d:2, sounds:"n",    sample:"n" },
+  { d:3, sounds:"m",    sample:"m" },
+  { d:4, sounds:"r",    sample:"r" },
+  { d:5, sounds:"l",    sample:"l" },
+  { d:6, sounds:"j, sh, ch, soft g", sample:"sh" },
+  { d:7, sounds:"k, hard g", sample:"k" },
+  { d:8, sounds:"f, v", sample:"f" },
+  { d:9, sounds:"p, b", sample:"p" }
+];
+
+/* =========================================================================
+   STATE  (localStorage)
+   ========================================================================= */
+const LS_KEY = "majorSystemTrainer_v1";
+const DAY = 86400000;
+const INTERVALS = [0, 1*DAY, 3*DAY, 7*DAY, 16*DAY, 60*DAY]; // index = level
+const SESSION_SIZE = 20;
+const NEW_CAP = 14; // most new cards introduced per session
+
+const pegByN = {};
+PEG_DATA.forEach(p => pegByN[p.n] = p);
+
+function defaultState(){
+  const pegs = {};
+  PEG_DATA.forEach(p => pegs[p.n] = { level:0, dueAt:0, seen:false, image:"" });
+  return {
+    pegs,
+    settings:{ dailyGoal:20, audioOn:true, accent:"#5b5bd6" },
+    streak:{ count:0, lastDate:null },
+    history:{},          // "YYYY-MM-DD": cards reviewed that day
+    points:0,
+    soundLessonDone:false,
+    speed:{ best:null, totalTime:0, totalCount:0 },
+    memorize:{ span:4, bestSpan:0, bestAccuracy:0, reveal:0 },
+    chainStory:""
+  };
+}
+
+let state;
+function loadState(){
+  let s;
+  try{ s = JSON.parse(localStorage.getItem(LS_KEY)); }catch(e){ s = null; }
+  const def = defaultState();
+  if(!s) return def;
+  // shallow-merge top level + ensure all pegs exist
+  s.settings = Object.assign(def.settings, s.settings||{});
+  s.streak   = Object.assign(def.streak, s.streak||{});
+  s.speed    = Object.assign(def.speed, s.speed||{});
+  s.memorize = Object.assign(def.memorize, s.memorize||{});
+  s.history  = s.history || {};
+  s.points   = s.points || 0;
+  if(!s.pegs) s.pegs = {};
+  PEG_DATA.forEach(p=>{ if(!s.pegs[p.n]) s.pegs[p.n] = { level:0, dueAt:0, seen:false, image:"" }; });
+  if(s.soundLessonDone===undefined) s.soundLessonDone=false;
+  if(s.chainStory===undefined) s.chainStory="";
+  return s;
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+const $ = sel => document.querySelector(sel);
+const stage = document.getElementById("stage");
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pegState(n){ return state.pegs[n]; }
+function allPegs(){ return PEG_DATA.map(p=>({ n:p.n, word:p.word, sounds:p.sounds, st:state.pegs[p.n] })); }
+
+function dayStr(off=0){
+  const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+off);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+/* normalize a typed word: lowercase, letters only */
+function norm(s){ return String(s).toLowerCase().replace(/[^a-z]/g,""); }
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m)return n; if(!n)return m;
+  const dp=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++)dp[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){
+    const c=a[i-1]===b[j-1]?0:1;
+    dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+c);
+  }
+  return dp[m][n];
+}
+function matchWord(input, target){
+  const a=norm(input), b=norm(target);
+  if(!a) return false;
+  if(a===b) return true;
+  const tol = b.length<=4 ? 1 : 2;
+  return lev(a,b) <= tol;
+}
+
+/* sound breakdown: pair each digit of n with its sound token */
+function breakdown(n){
+  const digits = String(n).split("");
+  const peg = pegByN[n];
+  const tokens = peg.sounds.split(",");
+  return digits.map((d,i)=>({ digit:d, sound:(tokens[i]||"?").trim() }));
+}
+
+/* acceptable sound strings for decode drill (handles "/" alternatives) */
+function soundStrings(n){
+  const tokens = pegByN[n].sounds.split(",").map(t=>t.split("/").map(x=>x.trim()));
+  let combos=[""];
+  tokens.forEach(alts=>{
+    const next=[];
+    combos.forEach(c=>alts.forEach(a=>next.push(c+a)));
+    combos=next;
+  });
+  return combos.map(c=>c.toLowerCase().replace(/[^a-z]/g,""));
+}
+function matchSounds(input, n){
+  const a = String(input).toLowerCase().replace(/[^a-z]/g,"");
+  return soundStrings(n).includes(a);
+}
+
+/* audio */
+function speak(text){
+  if(!state.settings.audioOn) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.rate=.95; u.pitch=1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakBtn(word){ return `<button class="speak" data-speak="${esc(word)}" title="Hear it">🔊</button>`; }
+
+/* =========================================================================
+   APP / ROUTER
+   ========================================================================= */
+const App = { screen:"home", cur:null, session:null, sound:null, decode:null, speed:null, mem:null, chain:null };
+
+function applyAccent(){
+  document.documentElement.style.setProperty("--accent", state.settings.accent);
+  // recompute soft tint
+  const soft = hexTint(state.settings.accent, .9);
+  document.documentElement.style.setProperty("--accent-soft", soft);
+}
+function hexTint(hex,amt){
+  const c=hex.replace("#",""); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+  const mix=(x)=>Math.round(x+(255-x)*amt);
+  return "#"+[mix(r),mix(g),mix(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+function refreshHeader(){
+  const live = (state.streak.lastDate===dayStr(0)||state.streak.lastDate===dayStr(-1)) && state.streak.count>0;
+  const doneToday = state.streak.lastDate===dayStr(0);
+  document.getElementById("streakNum").textContent = currentStreak();
+  const chip=document.getElementById("streakChip");
+  chip.classList.toggle("live", live);
+  chip.querySelector(".flame").textContent = doneToday ? "🔥" : "🔥";
+  let dn = chip.querySelector(".done");
+  if(doneToday){ if(!dn){ dn=document.createElement("span"); dn.className="done"; dn.textContent="✓"; chip.appendChild(dn);} }
+  else if(dn){ dn.remove(); }
+}
+function currentStreak(){
+  const t=dayStr(0), y=dayStr(-1);
+  if(state.streak.lastDate===t||state.streak.lastDate===y) return state.streak.count;
+  return 0;
+}
+
+function go(screen){ App.screen=screen; render(); }
+function render(){
+  refreshHeader();
+  switch(App.screen){
+    case "home": renderHome(); break;
+    case "practice": /* handled by its own flow */ break;
+    case "settings": renderSettings(); break;
+    case "images": renderImages(); break;
+    default: renderHome();
+  }
+}
+
+/* =========================================================================
+   HOME / DASHBOARD
+   ========================================================================= */
+function counts(){
+  const now=Date.now();
+  let due=0,newc=0,sumLvl=0,mastered=0;
+  allPegs().forEach(p=>{
+    sumLvl+=p.st.level;
+    if(p.st.level>=5) mastered++;
+    if(!p.st.seen) newc++;
+    else if(p.st.dueAt<=now) due++;
+  });
+  const total=PEG_DATA.length;
+  return { due, newc, total, mastered, pct:Math.round(sumLvl/(total*5)*100) };
+}
+
+function renderHome(){
+  const c=counts();
+  const today=dayStr(0);
+  const doneToday = (state.history[today]||0) >= state.settings.dailyGoal;
+  let html="";
+
+  if(!state.soundLessonDone){
+    html += `<div class="banner">
+      <div style="flex:1">New here? Start with the <b>Sound Code lesson</b>. The whole system rests on the ten digit sounds.</div>
+      <button class="btn sm" data-go="sound">Start lesson</button>
+    </div>`;
+  }
+
+  html += `<div class="card center">
+    <div class="promptlabel">Daily practice</div>
+    <div class="prompt num" style="font-size:2.4rem;margin:6px 0 2px">${c.pct}% mastered</div>
+    <div class="sub">${c.due} due now · ${c.newc} new to learn</div>
+    <div style="margin-top:18px"><button class="btn" data-action="startPractice">${doneToday?"Practice more":"Start practice"} →</button></div>
+    ${doneToday?`<div class="imgnote" style="margin-top:10px">✓ Today's goal of ${state.settings.dailyGoal} cards is done. Streak: <b>${currentStreak()}</b></div>`:`<div class="imgnote" style="margin-top:10px">${state.history[today]||0} / ${state.settings.dailyGoal} cards today</div>`}
+  </div>`;
+
+  // stats
+  html += `<div class="stats">
+    <div class="stat"><div class="big">${currentStreak()}</div><div class="lbl">Day streak</div></div>
+    <div class="stat"><div class="big">${c.mastered}</div><div class="lbl">Mastered</div></div>
+    <div class="stat"><div class="big">${c.due}</div><div class="lbl">Due now</div></div>
+  </div>`;
+
+  // mastery blocks
+  html += `<div class="secttitle">Mastery by block</div><div class="card"><div class="blocks">`;
+  for(let b=0;b<10;b++){
+    const lo=b*10, hi=b*10+9;
+    let sum=0,cnt=0;
+    for(let n=lo;n<=hi;n++){ if(pegByN[n]){ sum+=state.pegs[n].level; cnt++; } }
+    if(b===9 && pegByN[100]){ sum+=state.pegs[100].level; cnt++; } // fold 100 into last bar
+    const pct = cnt? Math.round(sum/(cnt*5)*100):0;
+    html += `<div class="blk"><div class="barwrap"><div class="fill" style="height:${pct}%"></div></div><div class="t">${b*10}</div></div>`;
+  }
+  html += `</div></div>`;
+
+  // heatmap
+  html += `<div class="secttitle">Practice history</div><div class="card">${heatmapHTML()}
+    <div class="legend">Less ${heatCell(0,"")} ${heatCell(1,"")} ${heatCell(2,"")} ${heatCell(3,"")} ${heatCell(4,"")} More</div>
+  </div>`;
+
+  // mode menu
+  const tiles=[
+    ["sound","🔤","Sound Code","Drill the 10 digit sounds"],
+    ["decode","🧩","Decode Drill","Number → sounds → word"],
+    ["speed","⚡","Speed Drill","Type pegs against the clock"],
+    ["chain","🔗","Number Chaining","Turn long numbers into a story"],
+    ["memorize","🧠","Memory Test","Memorize then reproduce"],
+    ["images","🖼️","Personal Images","Add your own vivid images"]
+  ];
+  html += `<div class="secttitle">Training modes</div><div class="menu">`;
+  tiles.forEach(t=>{
+    html += `<button class="tile" data-go="${t[0]}"><div class="ti">${t[1]}</div><div class="tt">${t[2]}</div><div class="td">${t[3]}</div></button>`;
+  });
+  html += `</div>`;
+
+  stage.innerHTML = html;
+}
+
+function heatCell(level,date){
+  const colors=["var(--line)","#cfd0ef","#9c9ee4","#7173da","var(--accent)"];
+  return `<span class="hc" style="background:${colors[level]}" title="${date}"></span>`;
+}
+function heatmapHTML(){
+  const goal=state.settings.dailyGoal;
+  const days=84;
+  const start=new Date(); start.setHours(0,0,0,0); start.setDate(start.getDate()-(days-1));
+  const firstWeekday=start.getDay(); // 0 Sun
+  let cells="";
+  for(let i=0;i<days;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const cnt=state.history[key]||0;
+    let lvl=0;
+    if(cnt>0) lvl=1;
+    if(cnt>=goal*0.5) lvl=2;
+    if(cnt>=goal) lvl=3;
+    if(cnt>=goal*2) lvl=4;
+    const style = i===0 ? `grid-row-start:${firstWeekday+1};` : "";
+    const colors=["var(--line)","#cfd0ef","#9c9ee4","#7173da","var(--accent)"];
+    cells += `<span class="hc" style="${style}background:${colors[lvl]}" title="${key}: ${cnt} cards"></span>`;
+  }
+  return `<div class="heat">${cells}</div>`;
+}
+
+/* =========================================================================
+   SPACED REPETITION + DAILY PRACTICE
+   ========================================================================= */
+function gradeCard(n, correct){
+  const st=state.pegs[n];
+  st.seen=true;
+  if(correct){ st.level=Math.min(5, st.level+1); }
+  else { st.level=0; }
+  st.dueAt = Date.now() + INTERVALS[st.level];
+}
+function recordReview(){
+  const t=dayStr(0);
+  state.history[t]=(state.history[t]||0)+1;
+  if((state.history[t]) >= state.settings.dailyGoal){ updateStreakGoalMet(); }
+}
+function updateStreakGoalMet(){
+  const t=dayStr(0), y=dayStr(-1);
+  if(state.streak.lastDate===t) return; // already counted today
+  if(state.streak.lastDate===y) state.streak.count++;
+  else state.streak.count=1;
+  state.streak.lastDate=t;
+}
+
+function startPractice(){
+  const now=Date.now();
+  const seen=allPegs().filter(p=>p.st.seen);
+  const due=seen.filter(p=>p.st.dueAt<=now).sort((a,b)=>a.st.dueAt-b.st.dueAt);
+  const unseen=allPegs().filter(p=>!p.st.seen);
+  let chosen=due.slice(0,SESSION_SIZE);
+  const slots=SESSION_SIZE-chosen.length;
+  if(slots>0 && unseen.length){
+    chosen=chosen.concat(shuffle(unseen).slice(0, Math.min(slots, NEW_CAP)));
+  }
+  if(chosen.length===0){ // nothing due, nothing new -> review soonest
+    chosen=seen.sort((a,b)=>a.st.dueAt-b.st.dueAt).slice(0,SESSION_SIZE);
+  }
+  App.session={
+    queue: shuffle(chosen).map(p=>({ n:p.n, dir: Math.random()<0.5?"n2w":"w2n" })),
+    i:0, correct:0, total:0, points:0
+  };
+  App.screen="practice";
+  nextCard();
+}
+
+function nextCard(){
+  const s=App.session;
+  if(!s || s.i>=s.queue.length){ return summary(); }
+  const card=s.queue[s.i];
+  const peg=pegByN[card.n];
+  const st=state.pegs[card.n];
+  const useMC = st.level < 2;
+  const dir = card.dir;
+  let options=null;
+  if(useMC){
+    if(dir==="n2w"){
+      const wrong=shuffle(PEG_DATA.filter(p=>p.n!==peg.n)).slice(0,3).map(p=>p.word);
+      options=shuffle([peg.word,...wrong]);
+    }else{
+      const wrong=shuffle(PEG_DATA.filter(p=>p.n!==peg.n)).slice(0,3).map(p=>p.n);
+      options=shuffle([peg.n,...wrong]);
+    }
+  }
+  App.cur={ peg, dir, useMC, options, answered:false };
+  drawCard();
+}
+
+function drawCard(){
+  const {peg,dir,useMC,options}=App.cur;
+  const s=App.session;
+  const progress=`${s.i+1} / ${s.queue.length}`;
+  const promptIsNum = dir==="n2w";
+  const promptVal = promptIsNum ? peg.n : peg.word;
+  let body=`
+    <div class="topnav"><button class="back" data-action="quitPractice">← End session</button><div class="spacer"></div><span class="pill">${progress}</span></div>
+    <div class="card center">
+      <div class="promptlabel">${promptIsNum?"What's the peg word for":"What number is"}</div>
+      <div class="prompt ${promptIsNum?'num':'word'}">${esc(promptVal)} ${promptIsNum?"":speakBtn(peg.word)}</div>
+  `;
+  if(useMC){
+    body+=`<div class="opts" id="opts">`;
+    options.forEach((o,idx)=>{
+      body+=`<button class="opt" data-opt="${esc(o)}"><span class="badge">${idx+1}</span><span>${esc(o)}</span></button>`;
+    });
+    body+=`</div>`;
+  }else{
+    const ph = dir==="n2w" ? "type the word" : "type the number";
+    const ik = dir==="n2w" ? "text" : "tel";
+    body+=`<input class="field" id="ans" inputmode="${dir==='n2w'?'text':'numeric'}" type="text" placeholder="${ph}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div style="margin-top:14px"><button class="btn" data-action="submitTyped">Check ↵</button></div>`;
+  }
+  body+=`</div>`;
+  stage.innerHTML=body;
+  bindSpeakers();
+  if(!useMC){ const f=$("#ans"); if(f) f.focus(); }
+}
+
+function answerCard(correct, chosenDisplay){
+  if(App.cur.answered) return;
+  App.cur.answered=true;
+  const s=App.session, {peg,useMC}=App.cur;
+  s.total++;
+  gradeCard(peg.n, correct);
+  recordReview();
+  if(correct){ s.correct++; const pts=useMC?5:10; s.points+=pts; state.points+=pts; }
+  save();
+  refreshHeader();
+  showFeedback(correct, chosenDisplay);
+}
+
+function showFeedback(correct, chosenDisplay){
+  const {peg,dir}=App.cur;
+  // mark MC options
+  if(App.cur.useMC){
+    document.querySelectorAll(".opt").forEach(b=>{
+      b.disabled=true;
+      const v=b.getAttribute("data-opt");
+      const correctVal = dir==="n2w" ? peg.word : String(peg.n);
+      if(v===correctVal) b.classList.add("correct");
+      else if(v===chosenDisplay && !correct) b.classList.add("wrong");
+    });
+  }
+  const bk=breakdown(peg.n).map(x=>`<span class="scode">${esc(x.sound)} <b>${x.digit}</b></span>`).join("");
+  const st=state.pegs[peg.n];
+  let imgHTML;
+  if(st.image){ imgHTML=`<div class="imgnote">Your image: <span class="mine">${esc(st.image)}</span></div>`; }
+  else { imgHTML=`<div class="imgnote"><button class="link" data-action="quickImage">+ add a personal image for ${peg.n}</button></div>`; }
+
+  const fb=`<div class="fb ${correct?'right':'miss'}">
+    <div class="verdict">${correct?"✓ Correct":"✗ Not quite"}</div>
+    <div class="answer">${peg.n} = ${esc(peg.word)} ${speakBtn(peg.word)}</div>
+    <div class="breakdown">${bk}</div>
+    ${imgHTML}
+  </div>
+  <div style="margin-top:14px"><button class="btn" data-action="advance">${App.session.i+1>=App.session.queue.length?"See summary":"Next"} ↵</button></div>`;
+  // append below card
+  stage.querySelector(".card").insertAdjacentHTML("beforeend", fb);
+  bindSpeakers();
+}
+
+function advance(){ App.session.i++; nextCard(); }
+
+function summary(){
+  const s=App.session;
+  const acc = s.total? Math.round(s.correct/s.total*100):0;
+  App.screen="practice-done";
+  stage.innerHTML=`
+    <div class="card center">
+      <div class="ti" style="font-size:2.4rem">🎉</div>
+      <h2>Session complete</h2>
+      <div class="stats" style="margin-top:14px">
+        <div class="stat"><div class="big">${s.total}</div><div class="lbl">Reviewed</div></div>
+        <div class="stat"><div class="big">${acc}%</div><div class="lbl">Accuracy</div></div>
+        <div class="stat"><div class="big">+${s.points}</div><div class="lbl">Points</div></div>
+      </div>
+      <div class="imgnote">Current streak: <b>${currentStreak()}</b> ${state.streak.lastDate===dayStr(0)?"🔥 goal met today":""}</div>
+      <div class="row" style="margin-top:18px">
+        <button class="btn ghost" data-go="home">Home</button>
+        <button class="btn" data-action="startPractice">Again</button>
+      </div>
+    </div>`;
+}
+
+function quitPractice(){ App.session=null; go("home"); }
+
+function quickImage(){
+  const peg=App.cur.peg;
+  const cur=state.pegs[peg.n].image||"";
+  const v=prompt(`Your vivid image for ${peg.n} (${peg.word}):`, cur);
+  if(v!==null){ state.pegs[peg.n].image=v.trim(); save();
+    // refresh the image note
+    const note=stage.querySelector(".imgnote");
+    if(note) note.innerHTML = state.pegs[peg.n].image ? `Your image: <span class="mine">${esc(state.pegs[peg.n].image)}</span>` : `<button class="link" data-action="quickImage">+ add a personal image for ${peg.n}</button>`;
+  }
+}
+
+/* =========================================================================
+   SOUND CODE LESSON
+   ========================================================================= */
+function startSound(){
+  const qs=[];
+  const digits=shuffle([0,1,2,3,4,5,6,7,8,9]);
+  // mix: digit -> sounds, and sound -> digit
+  digits.forEach((d,i)=>{
+    if(i%2===0){
+      const wrong=shuffle(SOUND_CODE.filter(s=>s.d!==d)).slice(0,3).map(s=>s.sounds);
+      qs.push({ q:`Which sound(s) make the digit <b>${d}</b>?`, opts:shuffle([SOUND_CODE[d].sounds,...wrong]), ans:SOUND_CODE[d].sounds });
+    }else{
+      const wrong=shuffle(SOUND_CODE.filter(s=>s.d!==d)).slice(0,3).map(s=>String(s.d));
+      qs.push({ q:`The sound <b>"${SOUND_CODE[d].sample}"</b> maps to which digit?`, opts:shuffle([String(d),...wrong]), ans:String(d) });
+    }
+  });
+  App.sound={ qs, i:0, correct:0, answered:false };
+  App.screen="sound";
+  drawSound();
+}
+function drawSound(){
+  const s=App.sound;
+  if(s.i>=s.qs.length) return soundDone();
+  const q=s.qs[s.i];
+  s.answered=false;
+  let body=`<div class="topnav"><button class="back" data-go="home">← Home</button><div class="spacer"></div><span class="pill">${s.i+1} / ${s.qs.length}</span></div>
+    <div class="card center">
+      <div class="promptlabel">Sound code</div>
+      <div class="prompt" style="font-size:1.5rem;margin:14px 0">${q.q}</div>
+      <div class="opts">`;
+  q.opts.forEach((o,idx)=>{ body+=`<button class="opt" data-sopt="${esc(o)}"><span class="badge">${idx+1}</span><span>${esc(o)}</span></button>`; });
+  body+=`</div></div>`;
+  stage.innerHTML=body;
+}
+function answerSound(val){
+  const s=App.sound; if(s.answered) return; s.answered=true;
+  const q=s.qs[s.i];
+  const correct = val===q.ans;
+  if(correct) s.correct++;
+  document.querySelectorAll(".opt").forEach(b=>{ b.disabled=true;
+    const v=b.getAttribute("data-sopt");
+    if(v===q.ans) b.classList.add("correct");
+    else if(v===val) b.classList.add("wrong");
+  });
+  stage.querySelector(".card").insertAdjacentHTML("beforeend",
+    `<div style="margin-top:14px"><button class="btn" data-action="soundNext">${s.i+1>=s.qs.length?"Finish":"Next"} ↵</button></div>`);
+}
+function soundNext(){ App.sound.i++; drawSound(); }
+function soundDone(){
+  state.soundLessonDone=true; save();
+  const s=App.sound;
+  App.screen="sound-done";
+  stage.innerHTML=`<div class="card center">
+    <div class="ti" style="font-size:2.2rem">🔤</div>
+    <h2>Sound code: ${s.correct} / ${s.qs.length}</h2>
+    <p class="sub">These ten sounds power everything. When you can hear them instantly, the pegs come fast.</p>
+    <div class="row" style="margin-top:16px">
+      <button class="btn ghost" data-action="startSound">Again</button>
+      <button class="btn" data-action="startPractice">Flashcards →</button>
+    </div>
+  </div>`;
+}
+
+/* small reusable sound-code reference card */
+function soundRefHTML(){
+  return `<div class="breakdown" style="justify-content:flex-start">` +
+    SOUND_CODE.map(s=>`<span class="scode"><b>${s.d}</b> ${esc(s.sounds)}</span>`).join("") +
+    `</div><div class="sub" style="margin-top:6px">Vowels and w, h, y are free filler and never count.</div>`;
+}
+
+/* =========================================================================
+   DECODE DRILL  (number -> sounds -> word)
+   ========================================================================= */
+function startDecode(){
+  App.decode={ n:pickDecodeNum(), phase:"sounds", done:0, correct:0 };
+  App.screen="decode";
+  drawDecode();
+}
+function pickDecodeNum(){ return Math.random()<0.15 ? rnd(0,9) : rnd(10,99); }
+function drawDecode(){
+  const d=App.decode;
+  const peg=pegByN[d.n];
+  let body=`<div class="topnav"><button class="back" data-go="home">← Home</button><div class="spacer"></div><span class="pill">Decoded: ${d.done}</span></div>
+    <div class="card center">
+      <div class="promptlabel">Decode drill · step ${d.phase==="sounds"?"1 of 2":"2 of 2"}</div>
+      <div class="prompt num">${d.n}</div>`;
+  if(d.phase==="sounds"){
+    body+=`<div class="sub">What consonant sounds are in this number?</div>
+      <input class="field" id="dans" placeholder="e.g. r, k" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div style="margin-top:12px"><button class="btn" data-action="decodeCheck">Check ↵</button></div>
+      <div style="margin-top:14px">${soundRefHTML()}</div>`;
+  }else{
+    const bk=breakdown(d.n).map(x=>`<span class="scode">${esc(x.sound)} <b>${x.digit}</b></span>`).join("");
+    body+=`<div class="breakdown">${bk}</div>
+      <div class="sub" style="margin-top:8px">Now, what peg word uses these sounds?</div>
+      <input class="field" id="dans" placeholder="type the word" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div style="margin-top:12px"><button class="btn" data-action="decodeCheck">Check ↵</button></div>`;
+  }
+  body+=`</div>`;
+  stage.innerHTML=body;
+  const f=$("#dans"); if(f) f.focus();
+}
+function decodeCheck(){
+  const d=App.decode;
+  const val=($("#dans")||{}).value||"";
+  const peg=pegByN[d.n];
+  if(d.phase==="sounds"){
+    const ok=matchSounds(val,d.n);
+    const correctStr=breakdown(d.n).map(x=>x.sound).join(", ");
+    feedbackInline(ok, `Sounds: <b>${esc(correctStr)}</b>`, ()=>{ d.phase="word"; drawDecode(); });
+  }else{
+    const ok=matchWord(val,peg.word);
+    if(ok) d.correct++;
+    d.done++;
+    feedbackInline(ok, `${d.n} = <b>${esc(peg.word)}</b> ${speakBtn(peg.word)}`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
+  }
+}
+/* generic inline feedback used by decode/speed/memorize */
+function feedbackInline(correct, answerHTML, nextFn){
+  App._next=nextFn;
+  const card=stage.querySelector(".card");
+  card.querySelectorAll("input,button[data-action]").forEach(el=>el.disabled=true);
+  card.insertAdjacentHTML("beforeend",
+    `<div class="fb ${correct?'right':'miss'}" style="margin-top:16px">
+       <div class="verdict">${correct?"✓ Correct":"✗ Not quite"}</div>
+       <div style="margin-top:4px;font-size:1.2rem">${answerHTML}</div>
+     </div>
+     <div style="margin-top:12px"><button class="btn" data-action="inlineNext">Next ↵</button></div>`);
+  bindSpeakers();
+}
+function inlineNext(){ const fn=App._next; App._next=null; if(fn) fn(); }
+
+/* =========================================================================
+   SPEED DRILL
+   ========================================================================= */
+const SPEED_ROUNDS=20;
+function startSpeed(){
+  App.speed={ round:0, times:[], correct:0, t0:0, answered:false };
+  App.screen="speed";
+  speedNext();
+}
+function speedNext(){
+  const s=App.speed;
+  if(s.round>=SPEED_ROUNDS) return speedDone();
+  s.n=rnd(10,99); s.answered=false; s.t0=performance.now();
+  const avg=s.times.length?Math.round(s.times.reduce((a,b)=>a+b,0)/s.times.length):0;
+  stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button><div class="spacer"></div><span class="pill">${s.round+1} / ${SPEED_ROUNDS}</span></div>
+    <div class="card center">
+      <div class="promptlabel">Speed drill · type the peg fast</div>
+      <div class="prompt num">${s.n}</div>
+      <input class="field" id="sans" inputmode="text" placeholder="word" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="meta"><span>avg <b>${avg?(avg/1000).toFixed(2)+"s":"—"}</b></span><span>best <b>${state.speed.best?(state.speed.best/1000).toFixed(2)+"s":"—"}</b></span><span>✓ <b>${s.correct}</b></span></div>
+    </div>`;
+  const f=$("#sans"); if(f) f.focus();
+}
+function speedSubmit(){
+  const s=App.speed; if(s.answered) return; s.answered=true;
+  const dt=performance.now()-s.t0;
+  const peg=pegByN[s.n];
+  const val=($("#sans")||{}).value||"";
+  const ok=matchWord(val,peg.word);
+  s.times.push(dt);
+  if(ok){ s.correct++; if(state.speed.best===null||dt<state.speed.best){ state.speed.best=dt; } }
+  state.speed.totalTime+=dt; state.speed.totalCount++; save();
+  const card=stage.querySelector(".card");
+  card.querySelector("#sans").disabled=true;
+  card.insertAdjacentHTML("beforeend",
+    `<div class="fb ${ok?'right':'miss'}" style="margin-top:14px">
+       <div class="verdict">${ok?"✓ "+(dt/1000).toFixed(2)+"s":"✗ "+esc(peg.word)}</div>
+     </div>
+     <div style="margin-top:12px"><button class="btn" data-action="speedAdvance">Next ↵</button></div>`);
+}
+function speedAdvance(){ App.speed.round++; speedNext(); }
+function speedDone(){
+  const s=App.speed;
+  const avg=s.times.length?(s.times.reduce((a,b)=>a+b,0)/s.times.length):0;
+  const acc=Math.round(s.correct/SPEED_ROUNDS*100);
+  const lifeAvg=state.speed.totalCount?state.speed.totalTime/state.speed.totalCount:0;
+  App.screen="speed-done";
+  stage.innerHTML=`<div class="card center">
+    <div class="ti" style="font-size:2.2rem">⚡</div>
+    <h2>Speed drill done</h2>
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><div class="big">${(avg/1000).toFixed(2)}s</div><div class="lbl">This avg</div></div>
+      <div class="stat"><div class="big">${acc}%</div><div class="lbl">Accuracy</div></div>
+      <div class="stat"><div class="big">${state.speed.best?(state.speed.best/1000).toFixed(2)+"s":"—"}</div><div class="lbl">Best ever</div></div>
+    </div>
+    <div class="imgnote">Lifetime average: <b>${(lifeAvg/1000).toFixed(2)}s</b> over ${state.speed.totalCount} answers</div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="home">Home</button><button class="btn" data-action="startSpeed">Again</button></div>
+  </div>`;
+}
+
+/* =========================================================================
+   NUMBER CHAINING
+   ========================================================================= */
+function startChain(){
+  App.chain={ type:"random", len:8, number:"" };
+  App.screen="chain";
+  genChain();
+}
+function chunkNumber(str){
+  const out=[]; let i=0;
+  while(i<str.length){
+    if(i+2<=str.length){ out.push(str.slice(i,i+2)); i+=2; }
+    else { out.push(str.slice(i)); i+=1; }
+  }
+  return out;
+}
+function genChainNumber(){
+  const c=App.chain;
+  if(c.type==="phone"){
+    let s=String(rnd(2,9)); for(let i=0;i<9;i++) s+=rnd(0,9); return s;
+  }else if(c.type==="year"){
+    return String(rnd(1900,2099));
+  }else if(c.type==="date"){
+    const mm=String(rnd(1,12)).padStart(2,"0");
+    const dd=String(rnd(1,28)).padStart(2,"0");
+    const yy=String(rnd(1950,2099));
+    return mm+dd+yy;
+  }else{
+    let s=""; for(let i=0;i<c.len;i++) s+=rnd(0,9); return s;
+  }
+}
+function genChain(){ App.chain.number=genChainNumber(); drawChain(); }
+function drawChain(){
+  const c=App.chain;
+  const chunks=chunkNumber(c.number);
+  let chainHTML="";
+  chunks.forEach((ch,idx)=>{
+    const peg=pegByN[parseInt(ch,10)];
+    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?peg.word:"?")}</div></div>`;
+    if(idx<chunks.length-1) chainHTML+=`<span class="arrow">→</span>`;
+  });
+  let pretty=c.number;
+  if(c.type==="phone") pretty=`(${c.number.slice(0,3)}) ${c.number.slice(3,6)}-${c.number.slice(6)}`;
+  if(c.type==="date") pretty=`${c.number.slice(0,2)}/${c.number.slice(2,4)}/${c.number.slice(4)}`;
+
+  stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
+    <div class="card">
+      <div class="ctrl">
+        <label>Type
+          <select id="chType">
+            <option value="random"${c.type==="random"?" selected":""}>Random</option>
+            <option value="phone"${c.type==="phone"?" selected":""}>Phone</option>
+            <option value="date"${c.type==="date"?" selected":""}>Date</option>
+            <option value="year"${c.type==="year"?" selected":""}>Year</option>
+          </select>
+        </label>
+        ${c.type==="random"?`<label>Digits <input class="numin" id="chLen" type="number" min="2" max="20" value="${c.len}"></label>`:""}
+        <button class="btn sm" data-action="genChain">New number ↻</button>
+      </div>
+      <div class="center">
+        <div class="promptlabel">Memorize this</div>
+        <div class="flashnum">${esc(pretty)}</div>
+        <div class="sub" style="margin-top:6px">Split into pairs, left to right. Link the words into one vivid story.</div>
+      </div>
+      <div class="chain">${chainHTML}</div>
+      <div class="secttitle">Your story</div>
+      <textarea class="scratch" id="chStory" placeholder="e.g. A giant Mat unrolls, a Root bursts through it, and a huge Lip blows it away...">${esc(state.chainStory||"")}</textarea>
+      <div class="sub" style="margin-top:6px">Build the images in order. Saved automatically.</div>
+    </div>`;
+}
+
+/* =========================================================================
+   MEMORIZE & REPRODUCE TEST
+   ========================================================================= */
+function startMemorize(){
+  App.mem={ phase:"ready", number:"", t0:0, memTime:0 };
+  App.screen="memorize";
+  drawMemReady();
+}
+function drawMemReady(){
+  const m=App.mem;
+  const reveal=state.memorize.reveal;
+  stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
+    <div class="card center">
+      <div class="promptlabel">Memory test</div>
+      <div class="prompt num" style="font-size:2.2rem">Span ${state.memorize.span} digits</div>
+      <div class="meta"><span>best span <b>${state.memorize.bestSpan}</b></span><span>best acc <b>${state.memorize.bestAccuracy}%</b></span></div>
+      <div class="ctrl" style="justify-content:center;margin-top:16px">
+        <label>Reveal
+          <select id="memReveal">
+            <option value="0"${reveal===0?" selected":""}>Until I'm ready</option>
+            <option value="3"${reveal===3?" selected":""}>3 seconds</option>
+            <option value="5"${reveal===5?" selected":""}>5 seconds</option>
+            <option value="10"${reveal===10?" selected":""}>10 seconds</option>
+          </select>
+        </label>
+      </div>
+      <div style="margin-top:14px"><button class="btn" data-action="memStart">Show number →</button></div>
+      <div class="sub" style="margin-top:10px">Get it exactly right and the span grows by 2. Miss and it eases back.</div>
+    </div>`;
+}
+function memStart(){
+  const m=App.mem;
+  const sel=$("#memReveal"); if(sel){ state.memorize.reveal=parseInt(sel.value,10); save(); }
+  // generate number of span length
+  let s=""; for(let i=0;i<state.memorize.span;i++) s+=rnd(0,9);
+  m.number=s; m.phase="show"; m.t0=performance.now();
+  drawMemShow();
+  const reveal=state.memorize.reveal;
+  if(reveal>0){
+    let left=reveal;
+    m.timer=setInterval(()=>{
+      left--; const el=$("#memCount"); if(el) el.textContent=left;
+      if(left<=0){ clearInterval(m.timer); memHide(); }
+    },1000);
+  }
+}
+function drawMemShow(){
+  const m=App.mem;
+  const reveal=state.memorize.reveal;
+  stage.innerHTML=`<div class="card center">
+      <div class="promptlabel">Memorize ${reveal>0?`· <span id="memCount">${reveal}</span>s`:""}</div>
+      <div class="flashnum" style="margin:18px 0">${esc(m.number)}</div>
+      ${reveal>0?"":`<button class="btn" data-action="memHide">I'm ready, hide it →</button>`}
+    </div>`;
+}
+function memHide(){
+  const m=App.mem;
+  if(m.timer) clearInterval(m.timer);
+  m.memTime=performance.now()-m.t0;
+  m.phase="recall";
+  stage.innerHTML=`<div class="card center">
+      <div class="promptlabel">Type it back from memory</div>
+      <input class="field" id="memAns" inputmode="numeric" placeholder="the number" autocomplete="off" style="font-size:2rem;letter-spacing:.08em">
+      <div style="margin-top:14px"><button class="btn" data-action="memCheck">Check ↵</button></div>
+    </div>`;
+  const f=$("#memAns"); if(f) f.focus();
+}
+function memCheck(){
+  const m=App.mem;
+  const val=(($("#memAns")||{}).value||"").replace(/[^0-9]/g,"");
+  const target=m.number;
+  let right=0;
+  for(let i=0;i<target.length;i++){ if(val[i]===target[i]) right++; }
+  const exact = val===target;
+  const acc=Math.round(right/target.length*100);
+  const secs=m.memTime/1000;
+  const dpm=secs>0?Math.round(target.length/(secs/60)):0;
+
+  // update stats
+  if(exact && state.memorize.span>state.memorize.bestSpan) state.memorize.bestSpan=state.memorize.span;
+  if(acc>state.memorize.bestAccuracy) state.memorize.bestAccuracy=acc;
+  const prevSpan=state.memorize.span;
+  if(exact) state.memorize.span=Math.min(20, state.memorize.span+2);
+  else state.memorize.span=Math.max(4, state.memorize.span-2);
+  save();
+
+  // peg chain answer key
+  const chunks=chunkNumber(target);
+  let chainHTML="";
+  chunks.forEach((ch,idx)=>{ const peg=pegByN[parseInt(ch,10)];
+    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?peg.word:"?")}</div></div>`;
+    if(idx<chunks.length-1) chainHTML+=`<span class="arrow">→</span>`; });
+
+  App.screen="mem-done";
+  stage.innerHTML=`<div class="card center">
+      <div class="fb ${exact?'right':'miss'}"><div class="verdict">${exact?"✓ Exact match!":`✗ ${right} / ${target.length} digits`}</div></div>
+      <div class="sub" style="margin-top:12px">You typed</div>
+      <div class="answer" style="font-size:1.5rem;letter-spacing:.06em">${esc(val||"—")}</div>
+      <div class="sub">Correct number</div>
+      <div class="answer" style="font-size:1.5rem;letter-spacing:.06em">${esc(target)}</div>
+      <div class="chain">${chainHTML}</div>
+      <div class="meta"><span>memorize <b>${secs.toFixed(1)}s</b></span><span><b>${dpm}</b> digits/min</span><span>next span <b>${state.memorize.span}</b></span></div>
+      <div class="imgnote">best span <b>${state.memorize.bestSpan}</b> · best accuracy <b>${state.memorize.bestAccuracy}%</b></div>
+      <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="home">Home</button><button class="btn" data-action="startMemorize">Next number →</button></div>
+    </div>`;
+}
+
+/* =========================================================================
+   PERSONAL IMAGES
+   ========================================================================= */
+function renderImages(){
+  let rows="";
+  PEG_DATA.forEach(p=>{
+    const img=state.pegs[p.n].image||"";
+    rows+=`<div class="irow" data-n="${p.n}">
+      <div class="num">${p.n}</div><div class="wd">${esc(p.word)}</div>
+      <input data-imgn="${p.n}" value="${esc(img)}" placeholder="your vivid image...">
+    </div>`;
+  });
+  stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
+    <div class="card">
+      <h2>Personal images</h2>
+      <p class="sub">Your own vivid image sticks far harder than a generic peg. They show up as a hint after you answer.</p>
+      <input class="search" id="imgSearch" placeholder="filter by number or word...">
+      <div class="imglist" id="imgList">${rows}</div>
+    </div>`;
+}
+
+/* =========================================================================
+   SETTINGS
+   ========================================================================= */
+function renderSettings(){
+  const accents=["#5b5bd6","#0ea5a4","#e0653f","#d6457e","#2d6cdf","#5a8f29"];
+  stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="settrow">
+        <div><div style="font-weight:600">Daily goal</div><div class="sub">Cards to keep your streak alive</div></div>
+        <input class="numin" id="setGoal" type="number" min="5" max="200" value="${state.settings.dailyGoal}">
+      </div>
+      <div class="settrow">
+        <div><div style="font-weight:600">Audio</div><div class="sub">Speak peg words aloud</div></div>
+        <div class="toggle ${state.settings.audioOn?'on':''}" id="setAudio"><div class="knob"></div></div>
+      </div>
+      <div class="settrow">
+        <div><div style="font-weight:600">Accent color</div></div>
+        <div class="swatches">${accents.map(a=>`<span class="sw ${state.settings.accent===a?'sel':''}" data-accent="${a}" style="background:${a}"></span>`).join("")}</div>
+      </div>
+      <div class="settrow" style="border:none">
+        <div><div style="font-weight:600">Reset progress</div><div class="sub">Wipe levels, streak, images, settings</div></div>
+        <button class="btn ghost sm danger" data-action="resetAll">Reset</button>
+      </div>
+      <div class="sub" style="margin-top:14px">Everything is stored locally in this browser.</div>
+    </div>`;
+}
+
+/* =========================================================================
+   EVENT WIRING
+   ========================================================================= */
+const actions={
+  startPractice, quitPractice, advance, quickImage, submitTyped,
+  startSound, soundNext, startDecode, decodeCheck, inlineNext,
+  startSpeed, speedAdvance, genChain, startMemorize, memStart, memHide, memCheck,
+  resetAll, soundDone
+};
+
+function submitTyped(){
+  if(!App.cur || App.cur.answered) return;
+  const {peg,dir}=App.cur;
+  const val=($("#ans")||{}).value||"";
+  let correct;
+  if(dir==="n2w") correct=matchWord(val,peg.word);
+  else correct=parseInt(val,10)===peg.n;
+  answerCard(correct, dir==="n2w"?val:String(parseInt(val,10)));
+}
+
+function resetAll(){
+  if(confirm("Reset all progress, streak, images and settings? This cannot be undone.")){
+    localStorage.removeItem(LS_KEY);
+    state=defaultState(); save(); applyAccent(); go("home");
+  }
+}
+
+function bindSpeakers(){
+  document.querySelectorAll("[data-speak]").forEach(b=>{
+    b.onclick=(e)=>{ e.stopPropagation(); speak(b.getAttribute("data-speak")); };
+  });
+}
+
+/* delegated clicks */
+document.addEventListener("click", e=>{
+  const go_=e.target.closest("[data-go]");
+  if(go_){ const t=go_.getAttribute("data-go");
+    if(t==="sound") return startSound();
+    if(t==="decode") return startDecode();
+    if(t==="speed") return startSpeed();
+    if(t==="chain") return startChain();
+    if(t==="memorize") return startMemorize();
+    if(t==="images") return go("images");
+    return go(t);
+  }
+  const act=e.target.closest("[data-action]");
+  if(act){ const fn=actions[act.getAttribute("data-action")]; if(fn) return fn(); }
+
+  const opt=e.target.closest(".opt[data-opt]");
+  if(opt && App.screen==="practice" && !App.cur.answered){
+    const val=opt.getAttribute("data-opt");
+    const {peg,dir}=App.cur;
+    const correct = dir==="n2w" ? val===peg.word : parseInt(val,10)===peg.n;
+    return answerCard(correct, val);
+  }
+  const sopt=e.target.closest(".opt[data-sopt]");
+  if(sopt && App.screen==="sound" && !App.sound.answered){
+    return answerSound(sopt.getAttribute("data-sopt"));
+  }
+});
+
+/* personal images: save on input + filter */
+document.addEventListener("input", e=>{
+  if(e.target.matches("[data-imgn]")){
+    const n=parseInt(e.target.getAttribute("data-imgn"),10);
+    state.pegs[n].image=e.target.value; save();
+  }
+  if(e.target.id==="imgSearch"){
+    const q=e.target.value.toLowerCase();
+    document.querySelectorAll(".irow").forEach(r=>{
+      const n=r.getAttribute("data-n"); const w=pegByN[parseInt(n,10)].word.toLowerCase();
+      r.style.display=(n.includes(q)||w.includes(q))?"":"none";
+    });
+  }
+  if(e.target.id==="chStory"){ state.chainStory=e.target.value; save(); }
+});
+
+/* settings changes */
+document.addEventListener("change", e=>{
+  if(e.target.id==="setGoal"){ const v=Math.max(1,parseInt(e.target.value,10)||20); state.settings.dailyGoal=v; save(); refreshHeader(); }
+  if(e.target.id==="chType"){ App.chain.type=e.target.value; genChain(); }
+  if(e.target.id==="chLen"){ App.chain.len=Math.min(20,Math.max(2,parseInt(e.target.value,10)||8)); }
+});
+document.addEventListener("click", e=>{
+  if(e.target.id==="setAudio"||e.target.closest("#setAudio")){
+    state.settings.audioOn=!state.settings.audioOn; save();
+    $("#setAudio").classList.toggle("on", state.settings.audioOn);
+  }
+  const sw=e.target.closest(".sw[data-accent]");
+  if(sw){ state.settings.accent=sw.getAttribute("data-accent"); save(); applyAccent(); renderSettings(); }
+});
+
+/* keyboard-first controls */
+document.addEventListener("keydown", e=>{
+  const tag=(e.target.tagName||"").toLowerCase();
+  const inText = tag==="input"||tag==="textarea";
+
+  // number keys pick MC (only when not typing in a field)
+  if(!inText && /^[1-9]$/.test(e.key)){
+    if(App.screen==="practice" && App.cur && App.cur.useMC && !App.cur.answered){
+      const idx=parseInt(e.key,10)-1;
+      const opts=document.querySelectorAll(".opt[data-opt]");
+      if(opts[idx]){ e.preventDefault(); opts[idx].click(); }
+      return;
+    }
+    if(App.screen==="sound" && App.sound && !App.sound.answered){
+      const idx=parseInt(e.key,10)-1;
+      const opts=document.querySelectorAll(".opt[data-sopt]");
+      if(opts[idx]){ e.preventDefault(); opts[idx].click(); }
+      return;
+    }
+  }
+
+  if(e.key==="Enter"){
+    // practice
+    if(App.screen==="practice"){
+      if(App.cur && App.cur.answered){ e.preventDefault(); return advance(); }
+      if(App.cur && !App.cur.useMC){ e.preventDefault(); return submitTyped(); }
+    }
+    if(App.screen==="practice-done"||App.screen==="speed-done"||App.screen==="mem-done"||App.screen==="sound-done"){ return; }
+    // inline-feedback flows (decode/speed)
+    const inlineNextBtn=document.querySelector('[data-action="inlineNext"]');
+    if(inlineNextBtn){ e.preventDefault(); return inlineNext(); }
+    if(App.screen==="decode"){ e.preventDefault(); return decodeCheck(); }
+    if(App.screen==="speed"){
+      const adv=document.querySelector('[data-action="speedAdvance"]');
+      if(adv){ e.preventDefault(); return speedAdvance(); }
+      e.preventDefault(); return speedSubmit();
+    }
+    if(App.screen==="memorize"){
+      const m=App.mem;
+      if(m && m.phase==="show" && state.memorize.reveal===0){ e.preventDefault(); return memHide(); }
+      if(m && m.phase==="recall"){ e.preventDefault(); return memCheck(); }
+      if(m && m.phase==="ready"){ e.preventDefault(); return memStart(); }
+    }
+    if(App.screen==="sound"){
+      const sn=document.querySelector('[data-action="soundNext"]');
+      if(sn){ e.preventDefault(); return soundNext(); }
+    }
+  }
+});
+
+/* header buttons */
+document.getElementById("logo").onclick=()=>go("home");
+document.getElementById("gear").onclick=()=>go("settings");
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+state=loadState();
+applyAccent();
+go("home");
+</script>
+</body>
+</html>
