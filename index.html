@@ -19,12 +19,28 @@
     --bad-soft:#fbe7e9;
     --radius:18px;
     --shadow:0 6px 24px rgba(30,30,60,.06);
+    --header:rgba(246,246,250,.86);
+  }
+  html[data-theme="dark"]{
+    --accent-soft:#23252e;
+    --bg:#15171c;
+    --card:#1e2128;
+    --text:#e8e6e1;
+    --muted:#9a96a0;
+    --line:#2d3138;
+    --good:#3fcf8e;
+    --good-soft:#15291f;
+    --bad:#ff6b78;
+    --bad-soft:#2c1a1d;
+    --shadow:0 6px 24px rgba(0,0,0,.4);
+    --header:rgba(21,23,28,.86);
+    color-scheme:dark;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);color:var(--text);
+    background:var(--bg);color:var(--text);transition:background-color .25s ease,color .25s ease;
     line-height:1.5;font-size:16px;
     -webkit-font-smoothing:antialiased;
   }
@@ -32,7 +48,7 @@
   input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
   .wrap{max-width:680px;margin:0 auto;padding:0 18px 80px}
   header{
-    position:sticky;top:0;z-index:10;background:rgba(246,246,250,.86);
+    position:sticky;top:0;z-index:10;background:var(--header);
     backdrop-filter:saturate(150%) blur(10px);
     border-bottom:1px solid var(--line);
   }
@@ -100,11 +116,9 @@
   .imgnote .mine{color:var(--text);font-style:italic}
   .link{color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;font-size:.9rem;text-decoration:underline}
 
-  .speak{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);vertical-align:middle;margin-left:8px;font-size:.95rem}
-  .speak:hover{border-color:var(--accent)}
 
   /* home dashboard */
-  .banner{background:var(--accent-soft);border:1px solid #dcd9f7;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.95rem}
+  .banner{background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.95rem}
   .banner .btn{width:auto;flex:none}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
   .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
@@ -141,12 +155,12 @@
   .meta b{color:var(--text)}
 
   .chain{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px 0}
-  .clink{background:var(--accent-soft);border:1px solid #dcd9f7;border-radius:12px;padding:10px 14px;text-align:center;min-width:64px}
+  .clink{background:var(--accent-soft);border:1px solid var(--line);border-radius:12px;padding:10px 14px;text-align:center;min-width:64px}
   .clink .cn{font-size:.8rem;color:var(--accent);font-weight:700}
   .clink .cw{font-weight:700;font-size:1.1rem}
   .arrow{align-self:center;color:var(--muted)}
 
-  textarea.scratch{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:14px;padding:14px;resize:vertical;font-size:1rem;margin-top:8px}
+  textarea.scratch{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:14px;padding:14px;resize:vertical;font-size:1rem;margin-top:8px;background:var(--card);color:inherit}
   textarea.scratch:focus{outline:none;border-color:var(--accent)}
 
   .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
@@ -159,9 +173,9 @@
   .irow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
   .irow .num{font-weight:700;width:34px;text-align:center;color:var(--accent)}
   .irow .wd{width:74px;font-weight:600;font-size:.92rem}
-  .irow input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.9rem}
+  .irow input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.9rem;background:var(--card);color:inherit}
   .irow input:focus{outline:none;border-color:var(--accent)}
-  .search{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:4px}
+  .search{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:4px;background:var(--card);color:inherit}
   .search:focus{outline:none;border-color:var(--accent)}
 
   .settrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
@@ -174,6 +188,7 @@
   .sw.sel{border-color:var(--text)}
   .danger{color:var(--bad);border-color:var(--bad)!important}
 
+  .swatch{font-size:1.7rem;font-weight:700;color:var(--accent);letter-spacing:.04em;margin:8px 0 2px;font-variant-numeric:tabular-nums}
   .bigtimer{font-size:3rem;font-weight:700;letter-spacing:.05em}
   .flashnum{font-size:3.4rem;font-weight:700;letter-spacing:.06em;word-break:break-all}
 
@@ -373,7 +388,7 @@ function defaultState(){
   PEG_DATA.forEach(p => pegs[p.n] = { level:0, dueAt:0, seen:false, image:"" });
   return {
     pegs,
-    settings:{ dailyGoal:20, audioOn:true, accent:"#5b5bd6" },
+    settings:{ dailyGoal:20, dark:false, accent:"#5b5bd6" },
     streak:{ count:0, lastDate:null },
     history:{},          // "YYYY-MM-DD": cards reviewed that day
     points:0,
@@ -465,17 +480,6 @@ function matchSounds(input, n){
   return soundStrings(n).includes(a);
 }
 
-/* audio */
-function speak(text){
-  if(!state.settings.audioOn) return;
-  try{
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.rate=.95; u.pitch=1;
-    speechSynthesis.speak(u);
-  }catch(e){}
-}
-function speakBtn(word){ return `<button class="speak" data-speak="${esc(word)}" title="Hear it">🔊</button>`; }
 
 /* =========================================================================
    APP / ROUTER
@@ -483,15 +487,20 @@ function speakBtn(word){ return `<button class="speak" data-speak="${esc(word)}"
 const App = { screen:"home", cur:null, session:null, sound:null, decode:null, speed:null, mem:null, chain:null };
 
 function applyAccent(){
-  document.documentElement.style.setProperty("--accent", state.settings.accent);
-  // recompute soft tint
-  const soft = hexTint(state.settings.accent, .9);
-  document.documentElement.style.setProperty("--accent-soft", soft);
+  const root=document.documentElement;
+  root.setAttribute("data-theme", state.settings.dark ? "dark" : "light");
+  root.style.setProperty("--accent", state.settings.accent);
+  // soft accent tint: toward white in light mode, toward the dark surface in dark mode
+  const soft = state.settings.dark ? hexMix(state.settings.accent,"#20232b",.70)
+                                   : hexMix(state.settings.accent,"#ffffff",.88);
+  root.style.setProperty("--accent-soft", soft);
 }
-function hexTint(hex,amt){
-  const c=hex.replace("#",""); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
-  const mix=(x)=>Math.round(x+(255-x)*amt);
-  return "#"+[mix(r),mix(g),mix(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+function hexMix(hex,target,amt){
+  const h=hex.replace("#",""), t=target.replace("#","");
+  const r1=parseInt(h.substr(0,2),16),g1=parseInt(h.substr(2,2),16),b1=parseInt(h.substr(4,2),16);
+  const r2=parseInt(t.substr(0,2),16),g2=parseInt(t.substr(2,2),16),b2=parseInt(t.substr(4,2),16);
+  const m=(a,b)=>Math.round(a+(b-a)*amt);
+  return "#"+[m(r1,r2),m(g1,g2),m(b1,b2)].map(x=>x.toString(16).padStart(2,"0")).join("");
 }
 
 function refreshHeader(){
@@ -511,7 +520,7 @@ function currentStreak(){
   return 0;
 }
 
-function go(screen){ App.screen=screen; render(); }
+function go(screen){ if(App.speed&&App.speed.tick){clearInterval(App.speed.tick);App.speed.tick=null;} App.screen=screen; render(); }
 function render(){
   refreshHeader();
   switch(App.screen){
@@ -750,7 +759,7 @@ function drawCard(){
     <div class="topnav"><button class="back" data-action="quitPractice">← End session</button><div class="spacer"></div>${s.extra?'<span class="pill">Extra</span> ':''}<span class="pill">${progress}</span></div>
     <div class="card center">
       <div class="promptlabel">${promptIsNum?"What's the peg word for":"What number is"}</div>
-      <div class="prompt ${promptIsNum?'num':'word'}">${esc(promptVal)} ${promptIsNum?"":speakBtn(peg.word)}</div>
+      <div class="prompt ${promptIsNum?'num':'word'}">${esc(promptVal)}</div>
   `;
   if(useMC){
     body+=`<div class="opts" id="opts">`;
@@ -766,7 +775,6 @@ function drawCard(){
   }
   body+=`</div>`;
   stage.innerHTML=body;
-  bindSpeakers();
   if(!useMC){ const f=$("#ans"); if(f) f.focus(); }
 }
 
@@ -803,14 +811,13 @@ function showFeedback(correct, chosenDisplay){
 
   const fb=`<div class="fb ${correct?'right':'miss'}">
     <div class="verdict">${correct?"✓ Correct":"✗ Not quite"}</div>
-    <div class="answer">${peg.n} = ${esc(peg.word)} ${speakBtn(peg.word)}</div>
+    <div class="answer">${peg.n} = ${esc(peg.word)}</div>
     <div class="breakdown">${bk}</div>
     ${imgHTML}
   </div>
   <div style="margin-top:14px"><button class="btn" data-action="advance">${App.session.i+1>=App.session.queue.length?"See summary":"Next"} ↵</button></div>`;
   // append below card
   stage.querySelector(".card").insertAdjacentHTML("beforeend", fb);
-  bindSpeakers();
 }
 
 function advance(){ App.session.i++; nextCard(); }
@@ -963,7 +970,7 @@ function decodeCheck(){
     const ok=matchWord(val,peg.word);
     if(ok) d.correct++;
     d.done++;
-    feedbackInline(ok, `${d.n} = <b>${esc(peg.word)}</b> ${speakBtn(peg.word)}`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
+    feedbackInline(ok, `${d.n} = <b>${esc(peg.word)}</b>`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
   }
 }
 /* generic inline feedback used by decode/speed/memorize */
@@ -977,7 +984,6 @@ function feedbackInline(correct, answerHTML, nextFn){
        <div style="margin-top:4px;font-size:1.2rem">${answerHTML}</div>
      </div>
      <div style="margin-top:12px"><button class="btn" data-action="inlineNext">Next ↵</button></div>`);
-  bindSpeakers();
 }
 function inlineNext(){ const fn=App._next; App._next=null; if(fn) fn(); }
 
@@ -986,12 +992,13 @@ function inlineNext(){ const fn=App._next; App._next=null; if(fn) fn(); }
    ========================================================================= */
 const SPEED_ROUNDS=20;
 function startSpeed(){
-  App.speed={ round:0, times:[], correct:0, t0:0, answered:false };
+  App.speed={ round:0, times:[], correct:0, t0:0, answered:false, tick:null };
   App.screen="speed";
   speedNext();
 }
 function speedNext(){
   const s=App.speed;
+  clearInterval(s.tick);
   if(s.round>=SPEED_ROUNDS) return speedDone();
   s.n=rnd(10,99); s.answered=false; s.t0=performance.now();
   const avg=s.times.length?Math.round(s.times.reduce((a,b)=>a+b,0)/s.times.length):0;
@@ -999,14 +1006,18 @@ function speedNext(){
     <div class="card center">
       <div class="promptlabel">Speed drill · type the peg fast</div>
       <div class="prompt num">${s.n}</div>
+      <div class="swatch" id="stopwatch">0.0s</div>
       <input class="field" id="sans" inputmode="text" placeholder="word" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="meta"><span>avg <b>${avg?(avg/1000).toFixed(2)+"s":"—"}</b></span><span>best <b>${state.speed.best?(state.speed.best/1000).toFixed(2)+"s":"—"}</b></span><span>✓ <b>${s.correct}</b></span></div>
     </div>`;
   const f=$("#sans"); if(f) f.focus();
+  s.tick=setInterval(()=>{ const el=document.getElementById("stopwatch"); if(el && !s.answered) el.textContent=((performance.now()-s.t0)/1000).toFixed(1)+"s"; },100);
 }
 function speedSubmit(){
   const s=App.speed; if(s.answered) return; s.answered=true;
+  clearInterval(s.tick);
   const dt=performance.now()-s.t0;
+  const sw=document.getElementById("stopwatch"); if(sw) sw.textContent=(dt/1000).toFixed(2)+"s";
   const peg=pegByN[s.n];
   const val=($("#sans")||{}).value||"";
   const ok=matchWord(val,peg.word);
@@ -1253,8 +1264,8 @@ function renderSettings(){
         <input class="numin" id="setGoal" type="number" min="5" max="200" value="${state.settings.dailyGoal}">
       </div>
       <div class="settrow">
-        <div><div style="font-weight:600">Audio</div><div class="sub">Speak peg words aloud</div></div>
-        <div class="toggle ${state.settings.audioOn?'on':''}" id="setAudio"><div class="knob"></div></div>
+        <div><div style="font-weight:600">Dark mode</div><div class="sub">Easier on the eyes at night</div></div>
+        <div class="toggle ${state.settings.dark?'on':''}" id="setDark"><div class="knob"></div></div>
       </div>
       <div class="settrow">
         <div><div style="font-weight:600">Accent color</div></div>
@@ -1295,11 +1306,6 @@ function resetAll(){
   }
 }
 
-function bindSpeakers(){
-  document.querySelectorAll("[data-speak]").forEach(b=>{
-    b.onclick=(e)=>{ e.stopPropagation(); speak(b.getAttribute("data-speak")); };
-  });
-}
 
 /* delegated clicks */
 document.addEventListener("click", e=>{
@@ -1352,9 +1358,9 @@ document.addEventListener("change", e=>{
   if(e.target.id==="chLen"){ App.chain.len=Math.min(20,Math.max(2,parseInt(e.target.value,10)||8)); }
 });
 document.addEventListener("click", e=>{
-  if(e.target.id==="setAudio"||e.target.closest("#setAudio")){
-    state.settings.audioOn=!state.settings.audioOn; save();
-    $("#setAudio").classList.toggle("on", state.settings.audioOn);
+  if(e.target.id==="setDark"||e.target.closest("#setDark")){
+    state.settings.dark=!state.settings.dark; save(); applyAccent();
+    $("#setDark").classList.toggle("on", state.settings.dark);
   }
   const sw=e.target.closest(".sw[data-accent]");
   if(sw){ state.settings.accent=sw.getAttribute("data-accent"); save(); applyAccent(); renderSettings(); }

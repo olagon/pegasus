@@ -28,7 +28,7 @@ in your browser.
 - **Personal images** you save for each peg.
 - **Number chaining** for random numbers, phone numbers, dates, and years.
 - **Memory test** with a growing digit span that tracks your best.
-- **Optional audio** using the browser voice.
+- **Dark mode** and an accent color, in Settings.
 
 ## Editing the pegs
 
@@ -39,7 +39,7 @@ changing a word keeps the level and personal image you already built.
 ## Tech
 
 One file. Plain HTML, CSS, and JavaScript with no frameworks or libraries.
-State is stored in `localStorage`. Audio uses the browser `speechSynthesis` API.
+State is stored in `localStorage`.
 
 ## Privacy
 
