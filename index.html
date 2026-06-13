@@ -184,11 +184,13 @@
 
   /* images list */
   .imglist{display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow:auto;margin-top:8px;padding-right:4px}
-  .irow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
-  .irow .num{font-weight:700;width:34px;text-align:center;color:var(--accent)}
-  .irow .wd{width:74px;font-weight:600;font-size:.92rem}
-  .irow input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.9rem;background:var(--card);color:inherit}
+  .irow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .irow .num{font-weight:700;width:32px;text-align:center;color:var(--accent)}
+  .irow .snd{width:50px;text-align:center;font-size:.74rem;color:var(--muted)}
+  .irow input{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.9rem;background:var(--card);color:inherit}
   .irow input:focus{outline:none;border-color:var(--accent)}
+  .irow .wordin{flex:1 1 110px;font-weight:600}
+  .irow .imgin{flex:2 1 170px}
   .search{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:4px;background:var(--card);color:inherit}
   .search:focus{outline:none;border-color:var(--accent)}
 
@@ -399,7 +401,7 @@ PEG_DATA.forEach(p => pegByN[p.n] = p);
 
 function defaultState(){
   const pegs = {};
-  PEG_DATA.forEach(p => pegs[p.n] = { level:0, dueAt:0, seen:false, image:"" });
+  PEG_DATA.forEach(p => pegs[p.n] = { level:0, dueAt:0, seen:false, image:"", customWord:"" });
   return {
     pegs,
     settings:{ dailyGoal:20, dark:false, accent:"#5b5bd6" },
@@ -427,7 +429,7 @@ function loadState(){
   s.history  = s.history || {};
   s.points   = s.points || 0;
   if(!s.pegs) s.pegs = {};
-  PEG_DATA.forEach(p=>{ if(!s.pegs[p.n]) s.pegs[p.n] = { level:0, dueAt:0, seen:false, image:"" }; });
+  PEG_DATA.forEach(p=>{ if(!s.pegs[p.n]) s.pegs[p.n] = { level:0, dueAt:0, seen:false, image:"", customWord:"" }; });
   if(s.soundLessonDone===undefined) s.soundLessonDone=false;
   if(s.chainStory===undefined) s.chainStory="";
   return s;
@@ -449,6 +451,8 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.flo
 function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function pegState(n){ return state.pegs[n]; }
 function allPegs(){ return PEG_DATA.map(p=>({ n:p.n, word:p.word, sounds:p.sounds, st:state.pegs[p.n] })); }
+/* The word shown and accepted for a number: the user's custom word if set, else the default. */
+function wordOf(n){ const c=state.pegs[n]&&state.pegs[n].customWord; return (c&&c.trim())?c.trim():pegByN[n].word; }
 
 function dayStr(off=0){
   const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+off);
@@ -625,7 +629,7 @@ function renderHome(){
     ["speed","⚡","Speed Drill","Type pegs against the clock"],
     ["chain","🔗","Number Chaining","Turn long numbers into a story"],
     ["memorize","🧠","Memory Test","Memorize then reproduce"],
-    ["images","🖼️","Personal Images","Add your own vivid images"]
+    ["images","🖼️","Your Pegs","Edit words and images"]
   ];
   html += `<div class="secttitle">Training modes</div><div class="menu">`;
   tiles.forEach(t=>{
@@ -761,8 +765,8 @@ function nextCard(){
   let options=null;
   if(useMC){
     if(dir==="n2w"){
-      const wrong=shuffle(PEG_DATA.filter(p=>p.n!==peg.n)).slice(0,3).map(p=>p.word);
-      options=shuffle([peg.word,...wrong]);
+      const wrong=shuffle(PEG_DATA.filter(p=>p.n!==peg.n)).slice(0,3).map(p=>wordOf(p.n));
+      options=shuffle([wordOf(peg.n),...wrong]);
     }else{
       const wrong=shuffle(PEG_DATA.filter(p=>p.n!==peg.n)).slice(0,3).map(p=>p.n);
       options=shuffle([peg.n,...wrong]);
@@ -777,7 +781,7 @@ function drawCard(){
   const s=App.session;
   const progress=`${s.i+1} / ${s.queue.length}`;
   const promptIsNum = dir==="n2w";
-  const promptVal = promptIsNum ? peg.n : peg.word;
+  const promptVal = promptIsNum ? peg.n : wordOf(peg.n);
   let body=`
     <div class="topnav"><button class="back" data-action="quitPractice">← End session</button><div class="spacer"></div>${s.extra?'<span class="pill">Extra</span> ':''}<span class="pill">${progress}</span></div>
     <div class="card center">
@@ -824,7 +828,7 @@ function showFeedback(correct, chosenDisplay){
     document.querySelectorAll(".opt").forEach(b=>{
       b.disabled=true;
       const v=b.getAttribute("data-opt");
-      const correctVal = dir==="n2w" ? peg.word : String(peg.n);
+      const correctVal = dir==="n2w" ? wordOf(peg.n) : String(peg.n);
       if(v===correctVal) b.classList.add("correct");
       else if(v===chosenDisplay && !correct) b.classList.add("wrong");
     });
@@ -837,7 +841,7 @@ function showFeedback(correct, chosenDisplay){
 
   const fb=`<div class="fb ${correct?'right':'miss'}">
     <div class="verdict">${correct?"✓ Correct":"✗ Not quite"}</div>
-    <div class="answer">${peg.n} = ${esc(peg.word)}</div>
+    <div class="answer">${peg.n} = ${esc(wordOf(peg.n))}</div>
     <div class="breakdown">${bk}</div>
     ${imgHTML}
   </div>
@@ -875,7 +879,7 @@ function quitPractice(){ App.session=null; go("home"); }
 function quickImage(){
   const peg=App.cur.peg;
   const cur=state.pegs[peg.n].image||"";
-  const v=prompt(`Your vivid image for ${peg.n} (${peg.word}):`, cur);
+  const v=prompt(`Your vivid image for ${peg.n} (${wordOf(peg.n)}):`, cur);
   if(v!==null){ state.pegs[peg.n].image=v.trim(); save(); track("image_saved",{peg:peg.n, from:"feedback"});
     // refresh the image note
     const note=stage.querySelector(".imgnote");
@@ -997,11 +1001,11 @@ function decodeCheck(){
     const correctStr=breakdown(d.n).map(x=>x.sound).join(", ");
     feedbackInline(ok, `Sounds: <b>${esc(correctStr)}</b>`, ()=>{ d.phase="word"; drawDecode(); });
   }else{
-    const ok=matchWord(val,peg.word);
+    const ok=matchWord(val,wordOf(peg.n));
     if(ok) d.correct++;
     d.done++;
     track("decode_round",{correct:ok?1:0, peg:d.n});
-    feedbackInline(ok, `${d.n} = <b>${esc(peg.word)}</b>`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
+    feedbackInline(ok, `${d.n} = <b>${esc(wordOf(peg.n))}</b>`, ()=>{ d.n=pickDecodeNum(); d.phase="sounds"; drawDecode(); });
   }
 }
 /* generic inline feedback used by decode/speed/memorize */
@@ -1052,7 +1056,7 @@ function speedSubmit(){
   const sw=document.getElementById("stopwatch"); if(sw) sw.textContent=(dt/1000).toFixed(2)+"s";
   const peg=pegByN[s.n];
   const val=($("#sans")||{}).value||"";
-  const ok=matchWord(val,peg.word);
+  const ok=matchWord(val,wordOf(peg.n));
   s.times.push(dt);
   if(ok){ s.correct++; if(state.speed.best===null||dt<state.speed.best){ state.speed.best=dt; } }
   state.speed.totalTime+=dt; state.speed.totalCount++; save();
@@ -1060,7 +1064,7 @@ function speedSubmit(){
   card.querySelector("#sans").disabled=true;
   card.insertAdjacentHTML("beforeend",
     `<div class="fb ${ok?'right':'miss'}" style="margin-top:14px">
-       <div class="verdict">${ok?"✓ "+(dt/1000).toFixed(2)+"s":"✗ "+esc(peg.word)}</div>
+       <div class="verdict">${ok?"✓ "+(dt/1000).toFixed(2)+"s":"✗ "+esc(wordOf(peg.n))}</div>
      </div>
      <div style="margin-top:12px"><button class="btn" data-action="speedAdvance">Next ↵</button></div>`);
 }
@@ -1124,7 +1128,7 @@ function drawChain(){
   let chainHTML="";
   chunks.forEach((ch,idx)=>{
     const peg=pegByN[parseInt(ch,10)];
-    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?peg.word:"?")}</div></div>`;
+    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?wordOf(peg.n):"?")}</div></div>`;
     if(idx<chunks.length-1) chainHTML+=`<span class="arrow">→</span>`;
   });
   let pretty=c.number;
@@ -1249,7 +1253,7 @@ function memCheck(){
   const chunks=chunkNumber(target);
   let chainHTML="";
   chunks.forEach((ch,idx)=>{ const peg=pegByN[parseInt(ch,10)];
-    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?peg.word:"?")}</div></div>`;
+    chainHTML+=`<div class="clink"><div class="cn">${ch}</div><div class="cw">${esc(peg?wordOf(peg.n):"?")}</div></div>`;
     if(idx<chunks.length-1) chainHTML+=`<span class="arrow">→</span>`; });
 
   App.screen="mem-done";
@@ -1272,16 +1276,20 @@ function memCheck(){
 function renderImages(){
   let rows="";
   PEG_DATA.forEach(p=>{
-    const img=state.pegs[p.n].image||"";
+    const st=state.pegs[p.n];
+    const img=st.image||"";
+    const cw=st.customWord||"";
     rows+=`<div class="irow" data-n="${p.n}">
-      <div class="num">${p.n}</div><div class="wd">${esc(p.word)}</div>
-      <input data-imgn="${p.n}" value="${esc(img)}" placeholder="your vivid image...">
+      <div class="num">${p.n}</div>
+      <div class="snd">${esc(p.sounds)}</div>
+      <input class="wordin" data-wordn="${p.n}" value="${esc(cw)}" placeholder="${esc(p.word)}" autocomplete="off" autocapitalize="words" spellcheck="false">
+      <input class="imgin" data-imgn="${p.n}" value="${esc(img)}" placeholder="your image for it...">
     </div>`;
   });
   stage.innerHTML=`<div class="topnav"><button class="back" data-go="home">← Home</button></div>
     <div class="card">
-      <h2>Personal images</h2>
-      <p class="sub">Your own vivid image sticks far harder than a generic peg. They show up as a hint after you answer.</p>
+      <h2>Your pegs</h2>
+      <p class="sub">Make these yours. Type your own word to replace the default (shown in grey), and add a vivid image. The sounds stay fixed, so pick a word that uses the same consonant sounds. Leave the word blank to keep the default.</p>
       <input class="search" id="imgSearch" placeholder="filter by number or word...">
       <div class="imglist" id="imgList">${rows}</div>
     </div>`;
@@ -1330,7 +1338,7 @@ function submitTyped(){
   const {peg,dir}=App.cur;
   const val=($("#ans")||{}).value||"";
   let correct;
-  if(dir==="n2w") correct=matchWord(val,peg.word);
+  if(dir==="n2w") correct=matchWord(val,wordOf(peg.n));
   else correct=parseInt(val,10)===peg.n;
   answerCard(correct, dir==="n2w"?val:String(parseInt(val,10)));
 }
@@ -1363,7 +1371,7 @@ document.addEventListener("click", e=>{
   if(opt && App.screen==="practice" && !App.cur.answered){
     const val=opt.getAttribute("data-opt");
     const {peg,dir}=App.cur;
-    const correct = dir==="n2w" ? val===peg.word : parseInt(val,10)===peg.n;
+    const correct = dir==="n2w" ? val===wordOf(peg.n) : parseInt(val,10)===peg.n;
     return answerCard(correct, val);
   }
   const sopt=e.target.closest(".opt[data-sopt]");
@@ -1378,11 +1386,16 @@ document.addEventListener("input", e=>{
     const n=parseInt(e.target.getAttribute("data-imgn"),10);
     state.pegs[n].image=e.target.value; save();
   }
+  if(e.target.matches("[data-wordn]")){
+    const n=parseInt(e.target.getAttribute("data-wordn"),10);
+    state.pegs[n].customWord=e.target.value; save();
+  }
   if(e.target.id==="imgSearch"){
     const q=e.target.value.toLowerCase();
     document.querySelectorAll(".irow").forEach(r=>{
-      const n=r.getAttribute("data-n"); const w=pegByN[parseInt(n,10)].word.toLowerCase();
-      r.style.display=(n.includes(q)||w.includes(q))?"":"none";
+      const n=r.getAttribute("data-n"); const num=parseInt(n,10);
+      const def=pegByN[num].word.toLowerCase(); const cw=(state.pegs[num].customWord||"").toLowerCase();
+      r.style.display=(n.includes(q)||def.includes(q)||cw.includes(q))?"":"none";
     });
   }
   if(e.target.id==="chStory"){ state.chainStory=e.target.value; save(); }
@@ -1394,6 +1407,7 @@ document.addEventListener("change", e=>{
   if(e.target.id==="chType"){ App.chain.type=e.target.value; genChain(); }
   if(e.target.id==="chLen"){ App.chain.len=Math.min(20,Math.max(2,parseInt(e.target.value,10)||8)); }
   if(e.target.matches("[data-imgn]")){ const n=parseInt(e.target.getAttribute("data-imgn"),10); track("image_saved",{peg:n, has_text:e.target.value.trim()?1:0, from:"list"}); }
+  if(e.target.matches("[data-wordn]")){ const n=parseInt(e.target.getAttribute("data-wordn"),10); track("peg_word_changed",{peg:n, custom:e.target.value.trim()?1:0}); }
 });
 document.addEventListener("click", e=>{
   if(e.target.id==="setDark"||e.target.closest("#setDark")){

@@ -25,16 +25,22 @@ in your browser.
 - **Sound Code lesson** to drill the ten digit sounds.
 - **Decode drill** that teaches you to break any number into sounds then a word.
 - **Speed drill** with best and average response time.
-- **Personal images** you save for each peg.
+- **Your own peg words and images**, override any default right in the app.
 - **Number chaining** for random numbers, phone numbers, dates, and years.
 - **Memory test** with a growing digit span that tracks your best.
 - **Dark mode** and an accent color, in Settings.
 
 ## Editing the pegs
 
-The peg words live in a `PEG_DATA` array at the top of the script in
-`index.html`. Edit a word there any time. Your progress is keyed by number, so
-changing a word keeps the level and personal image you already built.
+The easiest way is right inside the app. Open **Your Pegs** from the home
+screen and type your own word for any number, plus a personal image. Those are
+saved in your browser and override the defaults everywhere in the app. The
+sounds for each number never change, so pick a word that uses the same
+consonant sounds. Leave a word blank to keep the default.
+
+For the shipped defaults, the peg words live in a `PEG_DATA` array at the top of
+the script in `index.html`. Progress is keyed by number, so editing a word keeps
+the level and personal image you already built.
 
 ## Tech
 
