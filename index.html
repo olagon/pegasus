@@ -575,7 +575,8 @@ function renderHome(){
   const doneToday = (state.history[today]||0) >= state.settings.dailyGoal;
   let html="";
 
-  if(!state.soundLessonDone){
+  // Only nudge the Sound Code lesson to brand-new users: not done the lesson AND no pegs seen yet.
+  if(!state.soundLessonDone && c.newc===c.total){
     html += `<div class="banner">
       <div style="flex:1">New here? Start with the <b>Sound Code lesson</b>. The whole system rests on the ten digit sounds.</div>
       <button class="btn sm" data-go="sound">Start lesson</button>
@@ -1426,6 +1427,8 @@ document.addEventListener("keydown", e=>{
   }
 
   if(e.key==="Enter"){
+    // home: Enter starts practice, same as the Start practice button
+    if(App.screen==="home" && !inText && tag!=="button" && tag!=="a"){ e.preventDefault(); return startPractice(); }
     // practice
     if(App.screen==="practice"){
       if(App.cur && App.cur.answered){ e.preventDefault(); return advance(); }
