@@ -40,3 +40,13 @@ changing a word keeps the level and personal image you already built.
 
 One file. Plain HTML, CSS, and JavaScript with no frameworks or libraries.
 State is stored in `localStorage`. Audio uses the browser `speechSynthesis` API.
+
+## Privacy
+
+Pegasus runs entirely in your browser. No accounts, no servers, no analytics,
+no ads, and no tracking. Your progress never leaves your device. See
+[privacy.html](privacy.html) and [terms.html](terms.html) for the details.
+
+## License
+
+MIT. See [LICENSE](LICENSE). Use it, change it, and share it freely.
